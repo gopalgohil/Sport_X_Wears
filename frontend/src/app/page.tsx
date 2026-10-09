@@ -261,22 +261,6 @@ export default function HomePage() {
                     EXPLORE COLLECTION
                   </a>
                 </div>
-
-                {/* Trust Highlights */}
-                <div className="pt-6 border-t border-neutral-200 flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-bold uppercase tracking-wider text-neutral-700">
-                  <div className="flex items-center gap-2 bg-neutral-100 px-3 py-1.5 border border-neutral-200">
-                    <Zap className="w-3.5 h-3.5 text-red-600 fill-red-600" />
-                    <span>FREE DELIVERY OVER ₹1,999</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-neutral-100 px-3 py-1.5 border border-neutral-200">
-                    <ShieldCheck className="w-3.5 h-3.5 text-red-600" />
-                    <span>30-DAY SWEAT TRIAL</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-neutral-100 px-3 py-1.5 border border-neutral-200">
-                    <Award className="w-3.5 h-3.5 text-red-600" />
-                    <span>OLYMPIC GRADE</span>
-                  </div>
-                </div>
               </div>
 
               {/* Right Column: High-Impact Athletic Visual */}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Zap, ShieldCheck, Award, Flame, Loader2, X, Search, RotateCcw } from 'lucide-react';
 import { Product } from '../types';
 import Navbar from '../components/common/Navbar';
@@ -155,7 +155,6 @@ const STITCH_PRODUCTS: Product[] = [
 
 export default function HomePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
   const [selectedSize, setSelectedSize] = useState('ALL');
@@ -169,11 +168,16 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>(STITCH_PRODUCTS);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync search query from URL params if present
+  // Sync search query from URL params if present on client
   useEffect(() => {
-    const urlQuery = searchParams?.get('search') || '';
-    setSearchQuery(urlQuery);
-  }, [searchParams]);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlQuery = params.get('search') || '';
+      if (urlQuery) {
+        setSearchQuery(urlQuery);
+      }
+    }
+  }, []);
 
   // Fetch dynamic categories from backend MongoDB Atlas
   useEffect(() => {

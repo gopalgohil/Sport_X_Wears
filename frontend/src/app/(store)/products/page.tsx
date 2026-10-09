@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Loader2, X, Search, RotateCcw } from 'lucide-react';
 import { Product } from '../../../types';
 import Navbar from '../../../components/common/Navbar';
@@ -149,7 +149,6 @@ const STITCH_PRODUCTS: Product[] = [
 
 export default function ProductsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
   const [selectedSize, setSelectedSize] = useState('ALL');
@@ -164,11 +163,14 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const urlQuery = searchParams?.get('search') || '';
-    setSearchQuery(urlQuery);
-    const cat = searchParams?.get('category');
-    if (cat) setSelectedCategory(cat);
-  }, [searchParams]);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlQuery = params.get('search') || '';
+      if (urlQuery) setSearchQuery(urlQuery);
+      const cat = params.get('category');
+      if (cat) setSelectedCategory(cat);
+    }
+  }, []);
 
   useEffect(() => {
     async function loadCategories() {

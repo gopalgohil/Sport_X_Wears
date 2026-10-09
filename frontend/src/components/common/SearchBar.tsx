@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, X, TrendingUp, ArrowUpRight, Sparkles, Tag, ShoppingBag, Flame } from 'lucide-react';
 import { Product } from '../../types';
@@ -58,7 +58,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   className = '',
 }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -67,13 +66,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync initial search from URL params if available
+  // Sync initial search from URL params if available on client
   useEffect(() => {
-    const urlSearch = searchParams?.get('search');
-    if (urlSearch) {
-      setQuery(urlSearch);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlSearch = params.get('search');
+      if (urlSearch) {
+        setQuery(urlSearch);
+      }
     }
-  }, [searchParams]);
+  }, []);
 
   // Load recent searches from localStorage
   useEffect(() => {

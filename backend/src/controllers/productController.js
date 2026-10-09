@@ -157,9 +157,17 @@ export const getProducts = asyncHandler(async (req, res) => {
 
   // Search keyword filtering
   if (search && search.trim()) {
+    const trimmed = search.trim();
+    // Also find any categories that match the search keyword
+    const matchingCategories = await Category.find({
+      name: { $regex: trimmed, $options: 'i' },
+    }).select('_id').lean();
+    const matchingCatIds = matchingCategories.map((c) => c._id);
+
     queryFilter.$or = [
-      { title: { $regex: search.trim(), $options: 'i' } },
-      { description: { $regex: search.trim(), $options: 'i' } },
+      { title: { $regex: trimmed, $options: 'i' } },
+      { description: { $regex: trimmed, $options: 'i' } },
+      ...(matchingCatIds.length > 0 ? [{ category: { $in: matchingCatIds } }] : []),
     ];
   }
 

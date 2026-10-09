@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ArrowRight, Zap, ShieldCheck, Award, Flame, Loader2 } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { ArrowRight, Zap, ShieldCheck, Award, Flame, Loader2, X, Search, RotateCcw } from 'lucide-react';
 import { Product } from '../types';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -153,6 +154,9 @@ const STITCH_PRODUCTS: Product[] = [
 
 
 export default function HomePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
   const [selectedSize, setSelectedSize] = useState('ALL');
   const [sortBy, setSortBy] = useState('featured');
@@ -164,6 +168,12 @@ export default function HomePage() {
   ]);
   const [products, setProducts] = useState<Product[]>(STITCH_PRODUCTS);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync search query from URL params if present
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search') || '';
+    setSearchQuery(urlQuery);
+  }, [searchParams]);
 
   // Fetch dynamic categories from backend MongoDB Atlas
   useEffect(() => {
@@ -180,7 +190,7 @@ export default function HomePage() {
     loadCategories();
   }, []);
 
-  // Fetch dynamic products from backend API when filters or sort change
+  // Fetch dynamic products from backend API when filters, sort, or search change
   useEffect(() => {
     async function loadProducts() {
       setIsLoading(true);
@@ -189,10 +199,35 @@ export default function HomePage() {
           category: selectedCategory,
           size: selectedSize,
           sort: sortBy,
+          search: searchQuery.trim() || undefined,
         });
 
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setProducts(res.data);
+        } else if (searchQuery.trim()) {
+          // Local fallback filter if backend returned 0 items
+          const q = searchQuery.toLowerCase().trim();
+          const filteredFallback = STITCH_PRODUCTS.filter((p) => {
+            const catName = typeof p.category === 'string' ? p.category : p.category?.name || '';
+            const matchesQuery =
+              p.title.toLowerCase().includes(q) ||
+              p.description.toLowerCase().includes(q) ||
+              catName.toLowerCase().includes(q) ||
+              (p.tech && p.tech.toLowerCase().includes(q)) ||
+              (q.includes('cap') && catName.toLowerCase().includes('cap')) ||
+              ((q.includes('tshirt') || q.includes('t-shirt') || q.includes('tee') || q.includes('shirt')) &&
+                catName.toLowerCase().includes('t-shirt')) ||
+              ((q.includes('pant') || q.includes('jogger') || q.includes('track')) &&
+                catName.toLowerCase().includes('track'));
+
+            const matchesCat =
+              selectedCategory === 'ALL GEAR' || catName === selectedCategory;
+            const matchesSize =
+              selectedSize === 'ALL' || (p.sizes as string[]).includes(selectedSize);
+
+            return matchesQuery && matchesCat && matchesSize;
+          });
+          setProducts(filteredFallback);
         } else if (selectedCategory === 'ALL GEAR' && selectedSize === 'ALL') {
           // Fallback gracefully to stitch products if initial backend payload is empty
           setProducts(STITCH_PRODUCTS);
@@ -201,18 +236,51 @@ export default function HomePage() {
         }
       } catch (err) {
         console.error('Failed to load dynamic products:', err);
+        // Local fallback
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase().trim();
+          setProducts(
+            STITCH_PRODUCTS.filter((p) => {
+              const catName = typeof p.category === 'string' ? p.category : p.category?.name || '';
+              return (
+                p.title.toLowerCase().includes(q) ||
+                p.description.toLowerCase().includes(q) ||
+                catName.toLowerCase().includes(q)
+              );
+            })
+          );
+        } else {
+          setProducts(STITCH_PRODUCTS);
+        }
       } finally {
         setIsLoading(false);
       }
     }
 
     loadProducts();
-  }, [selectedCategory, selectedSize, sortBy]);
+  }, [selectedCategory, selectedSize, sortBy, searchQuery]);
+
+  const handleSearch = (newQuery: string) => {
+    setSearchQuery(newQuery);
+    if (newQuery.trim()) {
+      router.push(`/?search=${encodeURIComponent(newQuery.trim())}#products-section`);
+    } else {
+      router.push('/');
+    }
+
+    // Smooth scroll to product grid
+    setTimeout(() => {
+      const section = document.getElementById('products-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col">
-      {/* Navigation Bar */}
-      <Navbar />
+      {/* Navigation Bar with Search Integration */}
+      <Navbar onSearchSubmit={handleSearch} />
 
       {/* Mini Cart Slide-over Drawer */}
       <CartDrawer />
@@ -301,8 +369,37 @@ export default function HomePage() {
         {/* =========================================
             3. PRODUCT GRID & FILTER LAYOUT
            ========================================= */}
-        <section id="products-section" className="py-8 sm:py-12 bg-neutral-50/50 border-t border-neutral-200">
+        <section id="products-section" className="py-8 sm:py-12 bg-neutral-50/50 border-t border-neutral-200 scroll-mt-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Active Search Filter Banner */}
+            {searchQuery && (
+              <div className="mb-6 p-4 bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                    <Search className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs text-neutral-500 font-medium">Search results for: </span>
+                    <span className="font-headline text-sm sm:text-base font-extrabold uppercase text-neutral-950 bg-neutral-100 px-2.5 py-0.5 rounded border border-neutral-200">
+                      &quot;{searchQuery}&quot;
+                    </span>
+                    <span className="ml-2 text-xs font-bold text-red-600">
+                      ({products.length} {products.length === 1 ? 'item' : 'items'} found)
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSearch('')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-950 hover:bg-red-600 text-white text-xs font-headline font-extrabold uppercase tracking-wider rounded transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>Clear Search</span>
+                </button>
+              </div>
+            )}
+
             {/* Filter and Sorting Bar */}
             <ProductFilter
               categories={categoriesList}
@@ -315,13 +412,59 @@ export default function HomePage() {
               resultsCount={products.length}
             />
 
-            {/* Dynamic Product Grid with Loading State */}
+            {/* Dynamic Product Grid with Loading & Empty State */}
             {isLoading ? (
               <div className="py-24 flex flex-col items-center justify-center gap-3">
                 <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
                 <p className="font-headline text-xs font-bold uppercase tracking-widest text-neutral-500">
                   FETCHING LIVE ATHLETIC INVENTORY...
                 </p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="py-16 sm:py-24 text-center max-w-md mx-auto px-4 bg-white border border-neutral-200 rounded-2xl shadow-sm my-6">
+                <div className="w-16 h-16 bg-neutral-100 text-neutral-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8" />
+                </div>
+                <h3 className="font-headline text-xl sm:text-2xl font-black uppercase text-neutral-950 mb-2">
+                  NO ATHLETIC GEAR FOUND
+                </h3>
+                <p className="text-sm text-neutral-500 mb-6">
+                  {searchQuery
+                    ? `We couldn't find any products matching "${searchQuery}". Check the spelling or try searching for "Caps", "T-Shirts", or "Track Pants".`
+                    : 'No products match the selected filters. Try changing or resetting your filters.'}
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSearch('');
+                      setSelectedCategory('ALL GEAR');
+                      setSelectedSize('ALL');
+                    }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-950 hover:bg-red-600 text-white font-headline text-xs font-extrabold uppercase tracking-wider rounded transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>VIEW ALL GEAR</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSearch('Sports Caps');
+                    }}
+                    className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-headline text-xs font-bold uppercase rounded transition-colors cursor-pointer"
+                  >
+                    Caps
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSearch('Sports T-Shirts');
+                    }}
+                    className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-headline text-xs font-bold uppercase rounded transition-colors cursor-pointer"
+                  >
+                    T-Shirts
+                  </button>
+                </div>
               </div>
             ) : (
               <ProductGrid products={products} />

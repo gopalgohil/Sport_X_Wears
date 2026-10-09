@@ -16,11 +16,14 @@ import {
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
+import SearchBar from './SearchBar';
+
 interface NavbarProps {
+  onSearchSubmit?: (query: string) => void;
   onSearchClick?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick }) => {
   const { totalItems, openCart } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -44,26 +47,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-neutral-200">
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-3">
           {/* Athletic Brand Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center shrink-0">
             <Link href="/" className="flex items-center group">
-              <span className="font-headline text-3xl sm:text-4xl font-extrabold tracking-tighter uppercase italic text-neutral-950 flex items-center">
-                SPORT <span className="text-red-600 px-1 transform -skew-x-12 inline-block">X</span> WEAR
+              <span className="font-headline text-2xl sm:text-4xl font-extrabold tracking-tighter uppercase italic text-neutral-950 flex items-center">
+                SPORT <span className="text-red-600 px-0.5 sm:px-1 transform -skew-x-12 inline-block">X</span> WEAR
               </span>
             </Link>
           </div>
 
+          {/* Desktop Search Bar (Amazon / Flipkart Style) */}
+          <div className="hidden md:flex flex-1 max-w-lg mx-4">
+            <SearchBar onSearchSubmit={onSearchSubmit} />
+          </div>
+
           {/* Utility Icons (Search, Auth/Profile, Wishlist, Cart) */}
-          <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Search Trigger */}
-            <button
-              onClick={onSearchClick}
-              className="p-2 text-neutral-800 hover:text-red-600 transition-colors cursor-pointer"
-              aria-label="Search athletic gear"
-            >
-              <Search className="w-5 h-5" />
-            </button>
+          <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
 
             {/* Dynamic Authentication / Profile Menu */}
             {isAuthenticated && user ? (
@@ -167,6 +167,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
               </div>
             </button>
           </div>
+        </div>
+
+        {/* Mobile Search Bar Row (Amazon / Flipkart Mobile Style) */}
+        <div className="block md:hidden pb-3 pt-0.5">
+          <SearchBar onSearchSubmit={onSearchSubmit} isMobileFullWidth />
         </div>
       </div>
     </header>

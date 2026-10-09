@@ -123,7 +123,7 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | 'card'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi'>('cod');
   const [couponCode, setCouponCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponApplied, setCouponApplied] = useState(false);
@@ -960,37 +960,6 @@ export default function CheckoutPage() {
                       name="paymentMethod"
                       checked={paymentMethod === 'upi'}
                       onChange={() => setPaymentMethod('upi')}
-                      className="accent-neutral-950 w-4 h-4"
-                    />
-                  </label>
-
-                  {/* Cards */}
-                  <label
-                    onClick={() => setPaymentMethod('card')}
-                    className={`p-3.5 rounded-lg border-2 flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === 'card'
-                        ? 'border-neutral-950 bg-neutral-50/80 shadow-xs'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
-                        <CreditCard className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-headline text-xs sm:text-sm font-extrabold uppercase text-neutral-950">
-                          Credit / Debit / ATM Card
-                        </p>
-                        <p className="text-[11px] text-neutral-500">
-                          Visa, MasterCard, RuPay, Maestro
-                        </p>
-                      </div>
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      checked={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
                       className="accent-neutral-950 w-4 h-4"
                     />
                   </label>

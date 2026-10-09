@@ -308,6 +308,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     <button
                       key={idx}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleExecuteSearch(item.queryToRun);
+                      }}
                       onClick={() => {
                         handleExecuteSearch(item.queryToRun);
                       }}
@@ -347,6 +351,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     <button
                       key={idx}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleExecuteSearch(sug.queryToRun);
+                      }}
                       onClick={() => {
                         handleExecuteSearch(sug.queryToRun);
                       }}
@@ -390,6 +398,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                       <button
                         key={prod._id}
                         type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleExecuteSearch(prod.title);
+                        }}
                         onClick={() => {
                           handleExecuteSearch(prod.title);
                         }}
@@ -435,6 +447,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               {/* Bottom "See all results" CTA */}
               <button
                 type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleExecuteSearch(query);
+                }}
                 onClick={() => handleExecuteSearch(query)}
                 className="w-full py-2.5 px-4 bg-neutral-950 hover:bg-red-600 text-white text-xs font-headline font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >

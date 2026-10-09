@@ -159,33 +159,56 @@ export const getProducts = asyncHandler(async (req, res) => {
   if (search && search.trim()) {
     const rawSearch = search.trim();
     const cleanSearch = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const lowerSearch = rawSearch.toLowerCase();
+    const lower = rawSearch.toLowerCase();
 
-    // Expand search keywords with athletic synonyms
-    const keywords = [cleanSearch];
-    if (lowerSearch.includes('cap')) {
-      keywords.push('cap', 'caps', 'Sports Caps', 'trucker');
+    // Check if the query is a general category intent
+    const isCategorySearch =
+      lower === 'cap' ||
+      lower === 'caps' ||
+      lower === 'sports caps' ||
+      lower === 'tshirt' ||
+      lower === 't-shirt' ||
+      lower === 't-shirts' ||
+      lower === 't shirts' ||
+      lower === 'sports t-shirts' ||
+      lower === 'pant' ||
+      lower === 'pants' ||
+      lower === 'track pant' ||
+      lower === 'track pants' ||
+      lower === 'jogger' ||
+      lower === 'joggers';
+
+    if (isCategorySearch) {
+      let catKeyword = 'Sports Caps';
+      if (lower.includes('tshirt') || lower.includes('t-shirt') || lower.includes('t shirt') || lower.includes('tee')) {
+        catKeyword = 'Sports T-Shirts';
+      } else if (lower.includes('pant') || lower.includes('track') || lower.includes('jogger')) {
+        catKeyword = 'Track Pants';
+      }
+
+      const matchingCategories = await Category.find({
+        name: { $regex: catKeyword, $options: 'i' },
+      }).select('_id').lean();
+      const matchingCatIds = matchingCategories.map((c) => c._id);
+
+      queryFilter.$or = [
+        { title: { $regex: cleanSearch, $options: 'i' } },
+        { description: { $regex: cleanSearch, $options: 'i' } },
+        ...(matchingCatIds.length > 0 ? [{ category: { $in: matchingCatIds } }] : []),
+      ];
+    } else {
+      // Specific keyword / product title search
+      const words = rawSearch
+        .split(/\s+/)
+        .filter((w) => w.length > 2)
+        .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+      queryFilter.$or = [
+        { title: { $regex: cleanSearch, $options: 'i' } },
+        { description: { $regex: cleanSearch, $options: 'i' } },
+        ...(words.length > 0 ? words.map((w) => ({ title: { $regex: w, $options: 'i' } })) : []),
+      ];
     }
-    if (lowerSearch.includes('tshirt') || lowerSearch.includes('t-shirt') || lowerSearch.includes('tee') || lowerSearch.includes('shirt')) {
-      keywords.push('tee', 't-shirt', 'shirt', 'top', 'Sports T-Shirts');
-    }
-    if (lowerSearch.includes('pant') || lowerSearch.includes('jogger') || lowerSearch.includes('track')) {
-      keywords.push('pant', 'jogger', 'track', 'Track Pants');
-    }
-
-    const regexPatterns = keywords.map((kw) => new RegExp(kw, 'i'));
-
-    // Find any categories that match the keywords
-    const matchingCategories = await Category.find({
-      name: { $in: regexPatterns },
-    }).select('_id').lean();
-    const matchingCatIds = matchingCategories.map((c) => c._id);
-
-    queryFilter.$or = [
-      { title: { $in: regexPatterns } },
-      { description: { $in: regexPatterns } },
-      ...(matchingCatIds.length > 0 ? [{ category: { $in: matchingCatIds } }] : []),
-    ];
   }
 
   // High-performance sorting configurations

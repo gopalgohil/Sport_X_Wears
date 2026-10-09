@@ -46,12 +46,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-neutral-200">
       {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-13 sm:h-20 gap-2 sm:gap-3">
           {/* Athletic Brand Logo */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="flex items-center group">
-              <span className="font-headline text-2xl sm:text-4xl font-extrabold tracking-tighter uppercase italic text-neutral-950 flex items-center">
+              <span className="font-headline text-lg sm:text-3xl lg:text-4xl font-extrabold tracking-tighter uppercase italic text-neutral-950 flex items-center">
                 SPORT <span className="text-red-600 px-0.5 sm:px-1 transform -skew-x-12 inline-block">X</span> WEAR
               </span>
             </Link>

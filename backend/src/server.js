@@ -20,7 +20,11 @@ const PORT = process.env.PORT || 5000;
 // Security & Parsing Middlewares
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests from all origins (localhost, Vercel deployments, mobile/curl)
+      if (!origin) return callback(null, true);
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

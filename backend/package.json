@@ -1,0 +1,35 @@
+{
+  "name": "sportxwear-backend",
+  "version": "1.0.0",
+  "description": "Enterprise Node.js/Express API for SPORT X WEAR Athletic Apparel Store",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ecommerce",
+    "express",
+    "mongodb",
+    "mongoose",
+    "athletic-wear"
+  ],
+  "author": "SPORT X WEAR",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.1",
+    "multer": "^2.4.0",
+    "multer-storage-cloudinary": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

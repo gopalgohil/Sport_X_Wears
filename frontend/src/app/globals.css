@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --primary-red: #dc2626;
+  --primary-hover: #b91c1c;
+  --obsidian: #0a0a0a;
+  --athletic-neutral: #171717;
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+  background-color: #ffffff;
+  color: #171717;
+  overflow-x: hidden;
+}
+
+.font-headline {
+  font-family: var(--font-headline), sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-body), sans-serif;
+}
+
+/* Custom athletic scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}

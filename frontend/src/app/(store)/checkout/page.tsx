@@ -68,7 +68,7 @@ const INDIAN_STATES = [
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, token, isAuthenticated, updateProfile } = useAuth();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -80,21 +80,42 @@ export default function CheckoutPage() {
     state: 'Maharashtra',
     postalCode: '',
     addressType: 'home', // 'home' | 'work'
+    deliveryInstructions: '',
+    saveAddressToProfile: true,
   });
 
-  // Pre-fill user data when authenticated
+  // Pre-fill user data when authenticated OR from locally saved default address
   useEffect(() => {
     if (user) {
+      const defaultAddr =
+        user.addresses?.find((a) => a.isDefault) || user.addresses?.[0];
       setFormData((prev) => ({
         ...prev,
         name: prev.name || user.name || '',
         email: prev.email || user.email || '',
         phone: prev.phone || user.phone || '',
-        street: prev.street || user.addresses?.[0]?.street || '',
-        city: prev.city || user.addresses?.[0]?.city || '',
-        state: prev.state || user.addresses?.[0]?.state || 'Maharashtra',
-        postalCode: prev.postalCode || user.addresses?.[0]?.postalCode || '',
+        street: prev.street || defaultAddr?.street || '',
+        city: prev.city || defaultAddr?.city || '',
+        state: prev.state || defaultAddr?.state || 'Maharashtra',
+        postalCode: prev.postalCode || defaultAddr?.postalCode || '',
+        addressType:
+          (defaultAddr?.addressType as 'home' | 'work') ||
+          prev.addressType ||
+          'home',
       }));
+    } else {
+      try {
+        const saved = localStorage.getItem('sportxwear_saved_address');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setFormData((prev) => ({
+            ...prev,
+            ...parsed,
+          }));
+        }
+      } catch (e) {
+        console.error('Failed to load saved address', e);
+      }
     }
   }, [user]);
 
@@ -313,6 +334,50 @@ export default function CheckoutPage() {
       const result = await createOrder(payload, token);
 
       if (result.success && result.data?._id) {
+        // Automatically save address to localStorage for default 1-click checkout next time
+        try {
+          localStorage.setItem(
+            'sportxwear_saved_address',
+            JSON.stringify({
+              name: formData.name.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim(),
+              street: formData.street.trim(),
+              city: formData.city.trim(),
+              state: formData.state.trim(),
+              postalCode: formData.postalCode.trim(),
+              addressType: formData.addressType,
+            })
+          );
+        } catch (e) {
+          console.warn('Could not save address to localStorage:', e);
+        }
+
+        // If authenticated user, automatically add / update address in MongoDB profile
+        if (token && user && formData.saveAddressToProfile) {
+          try {
+            await updateProfile({
+              name: formData.name.trim(),
+              phone: formData.phone.trim(),
+              addresses: [
+                {
+                  street: formData.street.trim(),
+                  city: formData.city.trim(),
+                  state: formData.state.trim(),
+                  postalCode: formData.postalCode.trim(),
+                  addressType: formData.addressType || 'home',
+                  isDefault: true,
+                },
+                ...(user.addresses?.filter(
+                  (a) => a.street !== formData.street.trim()
+                ) || []),
+              ],
+            });
+          } catch (err) {
+            console.warn('Could not auto-save address to profile:', err);
+          }
+        }
+
         clearCart();
         router.push(`/order-success?orderId=${result.data._id}`);
       } else {
@@ -672,6 +737,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Address Type Selector (Flipkart / Amazon App Feature) */}
+                  {/* Address Type Selector (Flipkart / Amazon App Feature) */}
                   <div className="pt-1">
                     <label className="block text-[11px] font-bold uppercase text-neutral-600 mb-1.5">
                       Type of address:
@@ -703,6 +769,46 @@ export default function CheckoutPage() {
                         <span>Work (10 AM - 5 PM)</span>
                       </button>
                     </div>
+                  </div>
+
+                  {/* Delivery Landmark / Instructions */}
+                  <div className="pt-2">
+                    <label className="block text-[11px] font-bold uppercase text-neutral-600 mb-1">
+                      Delivery Landmark / Special Instructions (Optional):
+                    </label>
+                    <input
+                      type="text"
+                      name="deliveryInstructions"
+                      placeholder="e.g. Near City Hospital / 2nd Floor / Ring Doorbell"
+                      value={formData.deliveryInstructions}
+                      onChange={handleInputChange}
+                      className="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-xs text-neutral-900 focus:outline-none focus:border-red-600 placeholder:text-neutral-400"
+                    />
+                  </div>
+
+                  {/* Save to Profile Option */}
+                  <div className="pt-2 border-t border-neutral-100">
+                    <label className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={formData.saveAddressToProfile}
+                        onChange={(e) =>
+                          setFormData((p) => ({
+                            ...p,
+                            saveAddressToProfile: e.target.checked,
+                          }))
+                        }
+                        className="mt-0.5 w-4 h-4 rounded text-red-600 focus:ring-red-500 border-neutral-300 cursor-pointer accent-red-600"
+                      />
+                      <div>
+                        <span className="text-xs font-bold text-neutral-800">
+                          Save this address as default for future 1-click orders
+                        </span>
+                        <p className="text-[10px] text-neutral-500">
+                          Your delivery details will be automatically pre-filled next time.
+                        </p>
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -975,19 +1081,25 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Desktop Place Order Button (Hidden on Mobile) */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="hidden sm:flex w-full bg-red-600 hover:bg-red-700 disabled:bg-neutral-400 text-white font-headline text-sm font-black tracking-wider uppercase py-3.5 rounded items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> DISPATCHING...
-                    </>
-                  ) : (
-                    <>PLACE ORDER ({formatPrice(grandTotal)})</>
-                  )}
-                </button>
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="hidden sm:flex w-full bg-red-600 hover:bg-red-700 disabled:bg-neutral-400 text-white font-headline text-sm font-black tracking-wider uppercase py-3.5 rounded items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> DISPATCHING...
+                      </>
+                    ) : (
+                      <>PLACE ORDER ({formatPrice(grandTotal)})</>
+                    )}
+                  </button>
+
+                  <p className="hidden sm:block text-[10px] text-neutral-400 text-center mt-1.5 leading-tight">
+                    Instant SMS &amp; Email Confirmation • 100% Secure Checkout
+                  </p>
+                </div>
 
                 {/* Trust Footer */}
                 <div className="text-center text-[10px] text-neutral-500 font-semibold uppercase tracking-wider flex items-center justify-center gap-2 pt-1">
@@ -1019,19 +1131,24 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700 disabled:bg-neutral-400 text-white font-headline text-xs font-black tracking-wider uppercase px-6 py-3 rounded shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> DISPATCHING...
-                </>
-              ) : (
-                <>PLACE ORDER</>
-              )}
-            </button>
+            <div className="flex flex-col items-end">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-red-600 hover:bg-red-700 disabled:bg-neutral-400 text-white font-headline text-xs font-black tracking-wider uppercase px-6 py-3 rounded shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> DISPATCHING...
+                  </>
+                ) : (
+                  <>PLACE ORDER</>
+                )}
+              </button>
+              <span className="text-[9px] text-neutral-400 mt-0.5">
+                100% Safe Checkout
+              </span>
+            </div>
           </div>
         </form>
       </main>

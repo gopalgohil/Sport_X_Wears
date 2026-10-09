@@ -6,6 +6,7 @@ export interface Address {
   postalCode: string;
   country?: string;
   isDefault?: boolean;
+  addressType?: 'home' | 'work' | string;
 }
 
 export interface User {

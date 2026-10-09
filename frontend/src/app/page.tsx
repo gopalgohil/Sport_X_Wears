@@ -221,42 +221,42 @@ export default function HomePage() {
         {/* =========================================
             1. HERO SECTION (Clean White Athletic Canvas)
            ========================================= */}
-        <section className="relative w-full bg-gradient-to-b from-neutral-50 via-white to-white py-14 sm:py-20 lg:py-24 border-b border-neutral-200 overflow-hidden">
+        <section className="relative w-full bg-gradient-to-b from-neutral-50 via-white to-white py-10 sm:py-16 lg:py-24 border-b border-neutral-200 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-              {/* Left Column: Athletic Typography & CTAs */}
-              <div className="lg:col-span-7 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+              {/* Left Column: Athletic Typography & CTAs (Centered on Mobile, Left-aligned on Desktop) */}
+              <div className="lg:col-span-7 space-y-4 sm:space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start">
                 {/* Top Tagline Pill */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-red-50 border border-red-200 text-red-600 font-headline text-xs sm:text-sm font-extrabold uppercase tracking-widest">
-                  <Flame className="w-4 h-4 text-red-600 fill-red-600" />
-                  UNLEASH PEAK PERFORMANCE
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-red-50 border border-red-200 text-red-600 font-headline text-xs sm:text-sm font-extrabold uppercase tracking-widest rounded-full lg:rounded-none">
+                  <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600 fill-red-600 shrink-0" />
+                  <span>UNLEASH PEAK PERFORMANCE</span>
                 </div>
 
                 {/* Main Display Headline */}
-                <h1 className="font-headline text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.9] text-neutral-950">
-                  BUILT FOR <br />
+                <h1 className="font-headline text-4xl sm:text-6xl lg:text-8xl font-black uppercase tracking-tight leading-[0.95] text-neutral-950">
+                  BUILT FOR <br className="hidden sm:inline" />
                   <span className="text-red-600">CHAMPIONS</span>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-base sm:text-lg text-neutral-600 font-normal max-w-xl leading-relaxed">
+                <p className="text-sm sm:text-base lg:text-lg text-neutral-600 font-normal max-w-xl leading-relaxed">
                   Engineered with AeroVent™ hyper-cooling fabrics and zero-abrasion seam technology. Tested by elite athletes for uncompromising endurance.
                 </p>
 
                 {/* Action CTA Buttons */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2 w-full sm:w-auto">
                   <a
                     href="#products-section"
                     onClick={() => setSelectedCategory('Sports T-Shirts')}
-                    className="bg-red-600 hover:bg-red-700 text-white font-headline text-base font-extrabold tracking-wider uppercase px-8 py-4 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg hover:shadow-red-600/20 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-headline text-sm sm:text-base font-extrabold tracking-wider uppercase px-6 sm:px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg hover:shadow-red-600/20 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0 rounded-xs"
                   >
-                    SHOP T-SHIRTS <ArrowRight className="w-5 h-5" />
+                    SHOP T-SHIRTS <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </a>
 
                   <a
                     href="#products-section"
                     onClick={() => setSelectedCategory('ALL GEAR')}
-                    className="border-2 border-neutral-950 hover:bg-neutral-950 hover:text-white text-neutral-950 font-headline text-base font-extrabold tracking-wider uppercase px-8 py-4 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="w-full sm:w-auto border-2 border-neutral-950 hover:bg-neutral-950 hover:text-white text-neutral-950 font-headline text-sm sm:text-base font-extrabold tracking-wider uppercase px-6 sm:px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2 transition-all cursor-pointer rounded-xs"
                   >
                     EXPLORE COLLECTION
                   </a>
@@ -264,27 +264,28 @@ export default function HomePage() {
               </div>
 
               {/* Right Column: High-Impact Athletic Visual */}
-              <div className="lg:col-span-5 relative">
-                <div className="relative aspect-[4/5] w-full bg-neutral-100 border border-neutral-200 shadow-xl overflow-hidden">
+              <div className="lg:col-span-5 relative w-full max-w-md lg:max-w-none mx-auto">
+                <div className="relative aspect-[4/5] w-full bg-neutral-100 border border-neutral-200 shadow-xl overflow-hidden rounded-xl lg:rounded-none">
                   <Image
                     src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&auto=format&fit=crop&q=80"
                     alt="Elite Athlete in Training"
                     fill
                     priority
+                    sizes="(max-width: 1024px) 100vw, 40vw"
                     className="object-cover object-center"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/70 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 p-4 bg-white/95 backdrop-blur-md border border-neutral-200 shadow-lg">
+                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 p-3 sm:p-4 bg-white/95 backdrop-blur-md border border-neutral-200 shadow-lg rounded-lg lg:rounded-none">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-headline text-[10px] font-extrabold uppercase tracking-widest text-red-600">
+                        <p className="font-headline text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-red-600">
                           PRO-SERIES DROP 01
                         </p>
-                        <h4 className="font-headline text-base font-black uppercase text-neutral-950">
+                        <h4 className="font-headline text-xs sm:text-base font-black uppercase text-neutral-950">
                           AEROVENT™ HYPER-COOLING SYSTEM
                         </h4>
                       </div>
-                      <span className="font-headline text-xs font-bold uppercase px-2.5 py-1 bg-neutral-950 text-white">
+                      <span className="font-headline text-[10px] sm:text-xs font-bold uppercase px-2 sm:px-2.5 py-0.5 sm:py-1 bg-neutral-950 text-white rounded-xs">
                         TESTED
                       </span>
                     </div>

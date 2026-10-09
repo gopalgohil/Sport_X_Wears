@@ -196,38 +196,69 @@ export default function HomePage() {
       setIsLoading(true);
       try {
         const res = await getProducts({
-          category: selectedCategory,
+          category: searchQuery.trim() ? undefined : selectedCategory,
           size: selectedSize,
           sort: sortBy,
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setProducts(res.data);
-        } else if (searchQuery.trim()) {
-          // Local fallback filter if backend returned 0 items
-          const q = searchQuery.toLowerCase().trim();
-          const filteredFallback = STITCH_PRODUCTS.filter((p) => {
+        // Filter helper to ensure exact keyword relevance
+        const applyRelevanceFilter = (items: Product[], rawQuery: string) => {
+          const q = rawQuery.toLowerCase().trim();
+          const isCap = q.includes('cap');
+          const isTee = q.includes('tshirt') || q.includes('t-shirt') || q.includes('tee') || q.includes('shirt') || q.includes('top');
+          const isPant = q.includes('pant') || q.includes('jogger') || q.includes('track');
+
+          return items.filter((p) => {
             const catName = typeof p.category === 'string' ? p.category : p.category?.name || '';
-            const matchesQuery =
-              p.title.toLowerCase().includes(q) ||
-              p.description.toLowerCase().includes(q) ||
-              catName.toLowerCase().includes(q) ||
-              (p.tech && p.tech.toLowerCase().includes(q)) ||
-              (q.includes('cap') && catName.toLowerCase().includes('cap')) ||
-              ((q.includes('tshirt') || q.includes('t-shirt') || q.includes('tee') || q.includes('shirt')) &&
-                catName.toLowerCase().includes('t-shirt')) ||
-              ((q.includes('pant') || q.includes('jogger') || q.includes('track')) &&
-                catName.toLowerCase().includes('track'));
+            const titleLower = p.title.toLowerCase();
+            const descLower = p.description.toLowerCase();
+            const catLower = catName.toLowerCase();
+            const techLower = (p.tech || '').toLowerCase();
 
-            const matchesCat =
-              selectedCategory === 'ALL GEAR' || catName === selectedCategory;
-            const matchesSize =
-              selectedSize === 'ALL' || (p.sizes as string[]).includes(selectedSize);
+            // Strict category isolation for common keywords
+            if (isCap && !isTee && !isPant) {
+              return titleLower.includes('cap') || catLower.includes('cap') || descLower.includes('cap');
+            }
+            if (isTee && !isCap && !isPant) {
+              return (
+                titleLower.includes('tee') ||
+                titleLower.includes('shirt') ||
+                titleLower.includes('top') ||
+                catLower.includes('t-shirt') ||
+                catLower.includes('shirt') ||
+                descLower.includes('shirt')
+              );
+            }
+            if (isPant && !isCap && !isTee) {
+              return (
+                titleLower.includes('pant') ||
+                titleLower.includes('jogger') ||
+                catLower.includes('track') ||
+                descLower.includes('pant')
+              );
+            }
 
-            return matchesQuery && matchesCat && matchesSize;
+            // General keyword match
+            return (
+              titleLower.includes(q) ||
+              catLower.includes(q) ||
+              descLower.includes(q) ||
+              techLower.includes(q)
+            );
           });
-          setProducts(filteredFallback);
+        };
+
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (searchQuery.trim()) {
+            setProducts(applyRelevanceFilter(res.data, searchQuery));
+          } else {
+            setProducts(res.data);
+          }
+        } else if (searchQuery.trim()) {
+          // Local fallback filter on stitch products
+          const matched = applyRelevanceFilter(STITCH_PRODUCTS, searchQuery);
+          setProducts(matched);
         } else if (selectedCategory === 'ALL GEAR' && selectedSize === 'ALL') {
           // Fallback gracefully to stitch products if initial backend payload is empty
           setProducts(STITCH_PRODUCTS);
@@ -236,7 +267,6 @@ export default function HomePage() {
         }
       } catch (err) {
         console.error('Failed to load dynamic products:', err);
-        // Local fallback
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           setProducts(
@@ -262,6 +292,9 @@ export default function HomePage() {
 
   const handleSearch = (newQuery: string) => {
     setSearchQuery(newQuery);
+    setSelectedCategory('ALL GEAR');
+    setSelectedSize('ALL');
+
     if (newQuery.trim()) {
       router.push(`/?search=${encodeURIComponent(newQuery.trim())}#products-section`);
     } else {

@@ -189,37 +189,65 @@ export default function ProductsPage() {
       setIsLoading(true);
       try {
         const res = await getProducts({
-          category: selectedCategory,
+          category: searchQuery.trim() ? undefined : selectedCategory,
           size: selectedSize,
           sort: sortBy,
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setProducts(res.data);
-        } else if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase().trim();
-          const filteredFallback = STITCH_PRODUCTS.filter((p) => {
+        const applyRelevanceFilter = (items: Product[], rawQuery: string) => {
+          const q = rawQuery.toLowerCase().trim();
+          const isCap = q.includes('cap');
+          const isTee = q.includes('tshirt') || q.includes('t-shirt') || q.includes('tee') || q.includes('shirt') || q.includes('top');
+          const isPant = q.includes('pant') || q.includes('jogger') || q.includes('track');
+
+          return items.filter((p) => {
             const catName = typeof p.category === 'string' ? p.category : p.category?.name || '';
-            const matchesQuery =
-              p.title.toLowerCase().includes(q) ||
-              p.description.toLowerCase().includes(q) ||
-              catName.toLowerCase().includes(q) ||
-              (p.tech && p.tech.toLowerCase().includes(q)) ||
-              (q.includes('cap') && catName.toLowerCase().includes('cap')) ||
-              ((q.includes('tshirt') || q.includes('t-shirt') || q.includes('tee')) &&
-                catName.toLowerCase().includes('t-shirt')) ||
-              ((q.includes('pant') || q.includes('jogger')) &&
-                catName.toLowerCase().includes('track'));
+            const titleLower = p.title.toLowerCase();
+            const descLower = p.description.toLowerCase();
+            const catLower = catName.toLowerCase();
+            const techLower = (p.tech || '').toLowerCase();
 
-            const matchesCat =
-              selectedCategory === 'ALL GEAR' || catName === selectedCategory;
-            const matchesSize =
-              selectedSize === 'ALL' || (p.sizes as string[]).includes(selectedSize);
+            if (isCap && !isTee && !isPant) {
+              return titleLower.includes('cap') || catLower.includes('cap') || descLower.includes('cap');
+            }
+            if (isTee && !isCap && !isPant) {
+              return (
+                titleLower.includes('tee') ||
+                titleLower.includes('shirt') ||
+                titleLower.includes('top') ||
+                catLower.includes('t-shirt') ||
+                catLower.includes('shirt') ||
+                descLower.includes('shirt')
+              );
+            }
+            if (isPant && !isCap && !isTee) {
+              return (
+                titleLower.includes('pant') ||
+                titleLower.includes('jogger') ||
+                catLower.includes('track') ||
+                descLower.includes('pant')
+              );
+            }
 
-            return matchesQuery && matchesCat && matchesSize;
+            return (
+              titleLower.includes(q) ||
+              catLower.includes(q) ||
+              descLower.includes(q) ||
+              techLower.includes(q)
+            );
           });
-          setProducts(filteredFallback);
+        };
+
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (searchQuery.trim()) {
+            setProducts(applyRelevanceFilter(res.data, searchQuery));
+          } else {
+            setProducts(res.data);
+          }
+        } else if (searchQuery.trim()) {
+          const matched = applyRelevanceFilter(STITCH_PRODUCTS, searchQuery);
+          setProducts(matched);
         } else if (selectedCategory === 'ALL GEAR' && selectedSize === 'ALL') {
           setProducts(STITCH_PRODUCTS);
         } else {
@@ -238,6 +266,8 @@ export default function ProductsPage() {
 
   const handleSearch = (newQuery: string) => {
     setSearchQuery(newQuery);
+    setSelectedCategory('ALL GEAR');
+    setSelectedSize('ALL');
     if (newQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(newQuery.trim())}`);
     } else {

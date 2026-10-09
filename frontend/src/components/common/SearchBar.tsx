@@ -3,20 +3,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Search, X, TrendingUp, ArrowUpRight, Sparkles, Tag, ShoppingBag } from 'lucide-react';
+import { Search, X, TrendingUp, ArrowUpRight, Sparkles, Tag, ShoppingBag, Flame } from 'lucide-react';
 import { Product } from '../../types';
 import { getProducts } from '../../lib/api';
 
-// Popular initial suggestions
-const POPULAR_SUGGESTIONS = [
-  { label: 'Sports T-Shirts', category: 'Sports T-Shirts', type: 'category' },
-  { label: 'Sports Caps', category: 'Sports Caps', type: 'category' },
-  { label: 'Track Pants & Joggers', category: 'Track Pants', type: 'category' },
-  { label: 'AeroVent Mesh Tee', query: 'AeroVent', type: 'product' },
-  { label: 'Apex Compression Top', query: 'Compression', type: 'product' },
-  { label: 'Laser-Cut Performance Cap', query: 'Cap', type: 'product' },
-  { label: 'Hydro-Wick Trucker Cap', query: 'Trucker Cap', type: 'product' },
-  { label: 'Swift-Dry Training Shirt', query: 'Swift-Dry', type: 'product' },
+interface SearchSuggestion {
+  label: string;
+  subtitle?: string;
+  queryToRun: string;
+  type: 'category' | 'product' | 'keyword';
+  badge?: string;
+}
+
+// Popular athletic catalog suggestions
+const POPULAR_SUGGESTIONS: SearchSuggestion[] = [
+  { label: 'Sports Caps', subtitle: 'Category • Laser-cut & Trucker Caps', queryToRun: 'Sports Caps', type: 'category', badge: 'Caps' },
+  { label: 'Sports T-Shirts', subtitle: 'Category • AeroVent™ & Compression', queryToRun: 'Sports T-Shirts', type: 'category', badge: 'T-Shirts' },
+  { label: 'Track Pants & Joggers', subtitle: 'Category • StormShield & Velocity', queryToRun: 'Track Pants', type: 'category', badge: 'Pants' },
+  { label: 'AeroStrike Laser-Cut Performance Cap', subtitle: 'Sports Caps • ₹999', queryToRun: 'AeroStrike Laser-Cut Performance Cap', type: 'product' },
+  { label: 'Stealth Hydro-Wick Trucker Cap', subtitle: 'Sports Caps • ₹1,099', queryToRun: 'Stealth Hydro-Wick Trucker Cap', type: 'product' },
+  { label: 'Pro-Vent Mesh Seamless Tee', subtitle: 'Sports T-Shirts • ₹1,499', queryToRun: 'Pro-Vent Mesh Seamless Tee', type: 'product' },
+  { label: 'Apex Compression Top', subtitle: 'Sports T-Shirts • ₹1,799', queryToRun: 'Apex Aerodynamic Compression Top', type: 'product' },
+  { label: 'Velocity Tapered Track Pant 2.0', subtitle: 'Track Pants • ₹2,499', queryToRun: 'Velocity Tapered Track Pant 2.0', type: 'product' },
+];
+
+const ATHLETIC_SUGGESTION_DATABASE: SearchSuggestion[] = [
+  // Caps
+  { label: 'Sports Caps', subtitle: 'Category • All Caps & Headwear', queryToRun: 'Sports Caps', type: 'category', badge: 'Category' },
+  { label: 'AeroStrike Laser-Cut Performance Cap', subtitle: 'Sports Caps • ₹999', queryToRun: 'AeroStrike Laser-Cut Performance Cap', type: 'product', badge: 'Cap' },
+  { label: 'Stealth Hydro-Wick Trucker Cap', subtitle: 'Sports Caps • ₹1,099', queryToRun: 'Stealth Hydro-Wick Trucker Cap', type: 'product', badge: 'Cap' },
+  { label: 'Laser-Cut Performance Cap', subtitle: 'Search for Caps', queryToRun: 'Cap', type: 'keyword', badge: 'Keyword' },
+
+  // T-Shirts & Tops
+  { label: 'Sports T-Shirts', subtitle: 'Category • All Athletic Tees & Tops', queryToRun: 'Sports T-Shirts', type: 'category', badge: 'Category' },
+  { label: 'Pro-Vent Mesh Seamless Tee', subtitle: 'Sports T-Shirts • ₹1,499', queryToRun: 'Pro-Vent Mesh Seamless Tee', type: 'product', badge: 'T-Shirt' },
+  { label: 'Apex Aerodynamic Compression Top', subtitle: 'Sports T-Shirts • ₹1,799', queryToRun: 'Apex Aerodynamic Compression Top', type: 'product', badge: 'T-Shirt' },
+  { label: 'Kinetic Swift-Dry Training Shirt', subtitle: 'Sports T-Shirts • ₹1,299', queryToRun: 'Kinetic Swift-Dry Training Shirt', type: 'product', badge: 'T-Shirt' },
+  { label: 'Endurance Core Heavyweight Tee', subtitle: 'Sports T-Shirts • ₹1,399', queryToRun: 'Endurance Core Heavyweight Tee', type: 'product', badge: 'T-Shirt' },
+
+  // Track Pants
+  { label: 'Track Pants', subtitle: 'Category • All Track Pants & Joggers', queryToRun: 'Track Pants', type: 'category', badge: 'Category' },
+  { label: 'Velocity Tapered Track Pant 2.0', subtitle: 'Track Pants • ₹2,499', queryToRun: 'Velocity Tapered Track Pant 2.0', type: 'product', badge: 'Track Pant' },
+  { label: 'StormShield Weather-Resistant Jogger', subtitle: 'Track Pants • ₹2,799', queryToRun: 'StormShield Weather-Resistant Jogger', type: 'product', badge: 'Track Pant' },
 ];
 
 interface SearchBarProps {
@@ -33,7 +61,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [matchedProducts, setMatchedProducts] = useState<Product[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,7 +83,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         setRecentSearches(JSON.parse(saved).slice(0, 5));
       }
     } catch {
-      // Ignore localStorage errors
+      // Ignore
     }
   }, []);
 
@@ -81,47 +109,50 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const timer = setTimeout(async () => {
       const trimmed = query.trim().toLowerCase();
 
-      // 1. Generate Amazon/Flipkart keyword suggestions
-      const keywordPool = [
-        'sports t-shirts',
-        'sports caps',
-        'track pants',
-        'compression top',
-        'pro-vent mesh tee',
-        'aerostrike laser-cut cap',
-        'stealth hydro-wick cap',
-        'swift-dry training shirt',
-        'stormshield jogger',
-        'endurance core tee',
-        'gym t-shirt',
-        'workout cap',
-        'running pants',
-      ];
+      // 1. Filter structured suggestions from database
+      const filtered = ATHLETIC_SUGGESTION_DATABASE.filter((item) => {
+        const lMatch = item.label.toLowerCase().includes(trimmed);
+        const qMatch = item.queryToRun.toLowerCase().includes(trimmed);
+        const subMatch = item.subtitle ? item.subtitle.toLowerCase().includes(trimmed) : false;
+        return lMatch || qMatch || subMatch;
+      });
 
-      const matchedKeywords = keywordPool.filter((k) =>
-        k.toLowerCase().includes(trimmed)
-      );
-
-      // Add category suggestion if relevant
-      if ('caps'.includes(trimmed) || 'cap'.includes(trimmed)) {
-        if (!matchedKeywords.includes('cap in Sports Caps')) {
-          matchedKeywords.unshift('cap in Sports Caps');
-        }
-      }
-      if ('tshirt'.includes(trimmed) || 't-shirt'.includes(trimmed) || 't shirt'.includes(trimmed) || 'tee'.includes(trimmed)) {
-        if (!matchedKeywords.includes('t-shirt in Sports T-Shirts')) {
-          matchedKeywords.unshift('t-shirt in Sports T-Shirts');
-        }
-      }
-      if ('pant'.includes(trimmed) || 'jogger'.includes(trimmed) || 'track'.includes(trimmed)) {
-        if (!matchedKeywords.includes('track pants in Track Pants')) {
-          matchedKeywords.unshift('track pants in Track Pants');
-        }
+      // If user typed "cap" or "caps", ensure Sports Caps is top suggestion
+      if (trimmed.includes('cap') && !filtered.some(s => s.queryToRun === 'Sports Caps')) {
+        filtered.unshift({
+          label: 'Sports Caps',
+          subtitle: 'Category • All Caps & Headwear',
+          queryToRun: 'Sports Caps',
+          type: 'category',
+          badge: 'Category',
+        });
       }
 
-      setSuggestions(Array.from(new Set(matchedKeywords)).slice(0, 5));
+      // If user typed "t-shirt" or "tshirt" or "tee"
+      if ((trimmed.includes('tshirt') || trimmed.includes('t-shirt') || trimmed.includes('tee') || trimmed.includes('shirt')) && !filtered.some(s => s.queryToRun === 'Sports T-Shirts')) {
+        filtered.unshift({
+          label: 'Sports T-Shirts',
+          subtitle: 'Category • All Athletic Tees & Tops',
+          queryToRun: 'Sports T-Shirts',
+          type: 'category',
+          badge: 'Category',
+        });
+      }
 
-      // 2. Fetch live matching products
+      // If user typed "pant" or "jogger" or "track"
+      if ((trimmed.includes('pant') || trimmed.includes('jogger') || trimmed.includes('track')) && !filtered.some(s => s.queryToRun === 'Track Pants')) {
+        filtered.unshift({
+          label: 'Track Pants',
+          subtitle: 'Category • All Track Pants & Joggers',
+          queryToRun: 'Track Pants',
+          type: 'category',
+          badge: 'Category',
+        });
+      }
+
+      setSuggestions(filtered.slice(0, 6));
+
+      // 2. Fetch live matching products from API
       try {
         const res = await getProducts({ search: query.trim(), limit: 4 });
         if (res.success && res.data) {
@@ -130,7 +161,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       } catch (err) {
         console.error('Search preview error:', err);
       }
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -149,13 +180,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const finalQuery = searchTerm.trim();
     if (!finalQuery) return;
 
+    setQuery(finalQuery);
     saveRecentSearch(finalQuery);
     setIsOpen(false);
 
     if (onSearchSubmit) {
       onSearchSubmit(finalQuery);
     } else {
-      // Navigate to home products section with search query param
       router.push(`/?search=${encodeURIComponent(finalQuery)}#products-section`);
     }
   };
@@ -255,7 +286,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                         key={idx}
                         type="button"
                         onClick={() => {
-                          setQuery(term);
                           handleExecuteSearch(term);
                         }}
                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-medium rounded-full transition-colors cursor-pointer"
@@ -271,7 +301,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               <div>
                 <div className="flex items-center gap-1.5 text-[11px] font-headline font-bold uppercase tracking-wider text-neutral-400 mb-2">
                   <TrendingUp className="w-3.5 h-3.5 text-red-600" />
-                  <span>Trending Categories & Gear</span>
+                  <span>Popular Gear Categories</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {POPULAR_SUGGESTIONS.map((item, idx) => (
@@ -279,9 +309,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => {
-                        const val = item.category || item.query || item.label;
-                        setQuery(val);
-                        handleExecuteSearch(val);
+                        handleExecuteSearch(item.queryToRun);
                       }}
                       className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-50 text-left transition-colors cursor-pointer group"
                     >
@@ -289,9 +317,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                         <div className="w-7 h-7 rounded-md bg-neutral-100 group-hover:bg-red-50 text-neutral-600 group-hover:text-red-600 flex items-center justify-center shrink-0 transition-colors">
                           <Tag className="w-3.5 h-3.5" />
                         </div>
-                        <span className="text-xs font-semibold text-neutral-800 group-hover:text-red-600 truncate transition-colors">
-                          {item.label}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-neutral-800 group-hover:text-red-600 truncate transition-colors">
+                            {item.label}
+                          </p>
+                          {item.subtitle && (
+                            <p className="text-[10px] text-neutral-400 truncate">{item.subtitle}</p>
+                          )}
+                        </div>
                       </div>
                       <ArrowUpRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-red-600 transition-colors shrink-0" />
                     </button>
@@ -315,18 +348,28 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => {
-                        setQuery(sug);
-                        handleExecuteSearch(sug);
+                        handleExecuteSearch(sug.queryToRun);
                       }}
                       className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-neutral-50 text-left transition-colors cursor-pointer group border-b border-neutral-50 last:border-none"
                     >
-                      <div className="flex items-center gap-3">
-                        <Search className="w-3.5 h-3.5 text-neutral-400 group-hover:text-red-600 transition-colors" />
-                        <span className="text-xs sm:text-sm text-neutral-800 font-medium group-hover:text-red-600">
-                          {sug}
-                        </span>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Search className="w-3.5 h-3.5 text-neutral-400 group-hover:text-red-600 transition-colors shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm text-neutral-800 font-bold group-hover:text-red-600 block truncate">
+                            {sug.label}
+                          </span>
+                          {sug.subtitle && (
+                            <span className="text-[10px] text-neutral-400 block truncate">
+                              {sug.subtitle}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-red-600 transition-colors" />
+                      {sug.badge && (
+                        <span className="text-[9px] font-headline font-extrabold uppercase px-1.5 py-0.5 bg-neutral-100 text-neutral-600 rounded group-hover:bg-red-50 group-hover:text-red-600 transition-colors shrink-0 ml-2">
+                          {sug.badge}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>

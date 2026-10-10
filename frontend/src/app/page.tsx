@@ -7,7 +7,6 @@ import { ArrowRight, Zap, ShieldCheck, Award, Flame, Loader2, X, Search, RotateC
 import { Product } from '../types';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
-import CartDrawer from '../components/cart/CartDrawer';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilter from '../components/product/ProductFilter';
 import { getProducts, getCategories } from '../lib/api';
@@ -318,9 +317,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col">
       {/* Navigation Bar with Search Integration */}
       <Navbar onSearchSubmit={handleSearch} />
-
-      {/* Mini Cart Slide-over Drawer */}
-      <CartDrawer />
 
       <main className="flex-1">
         {/* =========================================

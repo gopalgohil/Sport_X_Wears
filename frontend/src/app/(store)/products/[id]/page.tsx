@@ -24,7 +24,6 @@ import { formatPrice, getDiscountPercentage } from '../../../../lib/utils';
 import { useCart } from '../../../../context/CartContext';
 import Navbar from '../../../../components/common/Navbar';
 import Footer from '../../../../components/common/Footer';
-import CartDrawer from '../../../../components/cart/CartDrawer';
 import { ProductCard } from '../../../../components/product/ProductCard';
 
 export default function ProductDetailPage() {
@@ -146,7 +145,6 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col">
       <Navbar />
-      <CartDrawer />
 
       <main className="flex-1">
         {/* Breadcrumb Navigation */}

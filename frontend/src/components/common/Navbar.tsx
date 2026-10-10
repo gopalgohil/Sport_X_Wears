@@ -17,6 +17,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
 import SearchBar from './SearchBar';
+import CartDrawer from '../cart/CartDrawer';
 
 interface NavbarProps {
   onSearchSubmit?: (query: string) => void;
@@ -44,6 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
   }, []);
 
   return (
+    <>
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-neutral-200">
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -175,6 +177,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
         </div>
       </div>
     </header>
+    <CartDrawer />
+    </>
   );
 };
 

@@ -305,6 +305,50 @@ export async function resendVerificationOtp(payload: {
   return data;
 }
 
+/**
+ * Request password reset OTP to registered email
+ */
+export async function requestForgotPassword(email: string): Promise<{ success: boolean; message: string; email?: string }> {
+  const url = `${API_BASE_URL}/auth/forgot-password`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to request password reset code.');
+  }
+
+  return data;
+}
+
+/**
+ * Reset password with 6-digit OTP
+ */
+export async function submitResetPassword(payload: {
+  email: string;
+  otp: string;
+  password: string;
+}): Promise<{ success: boolean; message: string }> {
+  const url = `${API_BASE_URL}/auth/reset-password`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to reset password.');
+  }
+
+  return data;
+}
+
 
 /**
  * Fetch currently logged in user profile using token

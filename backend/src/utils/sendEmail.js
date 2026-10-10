@@ -122,3 +122,65 @@ export const getOtpEmailTemplate = (name, otp) => {
 </html>
   `;
 };
+
+/**
+ * Generate branded Password Reset OTP email template
+ */
+export const getPasswordResetOtpTemplate = (name, otp) => {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Reset Your SPORT X WEAR Password</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f3f0; margin: 0; padding: 30px 15px;">
+  <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e5e5e5;">
+    <!-- Brand Header -->
+    <div style="background-color: #0a0a0a; padding: 28px 24px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; font-style: italic;">
+        SPORT <span style="color: #e60000; font-style: italic;">X</span> WEAR
+      </h1>
+      <p style="color: #a3a3a3; margin: 6px 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px;">
+        BUILT FOR CHAMPIONS
+      </p>
+    </div>
+
+    <!-- Body -->
+    <div style="padding: 32px 28px; text-align: center;">
+      <h2 style="color: #171717; margin: 0 0 10px; font-size: 20px; font-weight: 800; text-transform: uppercase;">
+        PASSWORD RESET REQUEST
+      </h2>
+      <p style="color: #525252; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+        Hi <strong>${name || 'Athlete'}</strong>, we received a request to reset the password for your SPORT X WEAR account. Use the 6-digit OTP below to proceed with setting a new password.
+      </p>
+
+      <!-- 6-digit OTP Box -->
+      <div style="background: #f7f7f6; border: 2px dashed #e60000; border-radius: 10px; padding: 18px 24px; display: inline-block; margin: 0 auto 24px;">
+        <span style="font-family: 'Courier New', monospace; font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #0a0a0a; display: block;">
+          ${otp}
+        </span>
+      </div>
+
+      <p style="color: #737373; font-size: 12px; margin: 0 0 20px;">
+        ⏳ This code expires in <strong>10 minutes</strong>. If you did not request this, your account is safe and you can ignore this email.
+      </p>
+
+      <hr style="border: none; border-top: 1px solid #f0f0f0; margin: 24px 0;" />
+
+      <p style="color: #a3a3a3; font-size: 11px; margin: 0;">
+        For account security, never share this OTP with anyone.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background-color: #fafafa; padding: 16px 20px; text-align: center; border-top: 1px solid #eeeeee;">
+      <p style="color: #737373; font-size: 11px; margin: 0; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">
+        SPORT X WEAR • HIGH PERFORMANCE ATHLETIC APPAREL
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { sendBrevoEmail, getOtpEmailTemplate } from '../utils/sendEmail.js';
+import { sendBrevoEmail, getOtpEmailTemplate, getPasswordResetOtpTemplate } from '../utils/sendEmail.js';
 
 /**
  * Generate standard JWT signed token
@@ -387,6 +387,145 @@ export const updateProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error updating profile.',
+    });
+  }
+};
+
+/**
+ * @route   POST /api/v1/auth/forgot-password
+ * @desc    Check if athlete is registered, generate 6-digit reset OTP and email it
+ * @access  Public
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide your registered email address.',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user is registered in the database
+    const user = await User.findOne({ email: normalizedEmail }).select('+resetPasswordOtp +resetPasswordOtpExpire');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No registered athlete account found with this email. Please register first.',
+      });
+    }
+
+    if (user.isVerified === false) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your account is not verified yet. Please complete registration first.',
+      });
+    }
+
+    // Generate 6-digit OTP & 10-minute expiry
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOtp = otp;
+    user.resetPasswordOtpExpire = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    // Send OTP via Brevo
+    try {
+      await sendBrevoEmail({
+        toEmail: normalizedEmail,
+        toName: user.name,
+        subject: `Your SPORT X WEAR Password Reset Code: ${otp}`,
+        htmlContent: getPasswordResetOtpTemplate(user.name, otp),
+      });
+      console.log(`[Brevo Email Sent] Password reset OTP sent to: ${normalizedEmail}`);
+    } catch (mailError) {
+      console.error(`[Brevo Email Error]:`, mailError.message);
+      console.log(`\n==============================================`);
+      console.log(`[DEV RESET OTP LOG] Code for ${normalizedEmail} is: ${otp}`);
+      console.log(`==============================================\n`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `A 6-digit password reset code has been sent to ${normalizedEmail}.`,
+      email: normalizedEmail,
+    });
+  } catch (error) {
+    console.error('[Forgot Password Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error processing password reset request.',
+    });
+  }
+};
+
+/**
+ * @route   POST /api/v1/auth/reset-password
+ * @desc    Verify 6-digit reset OTP & update password
+ * @access  Public
+ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    if (!email || !otp || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email, verification OTP and new password.',
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long.',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanOtp = otp.toString().trim();
+
+    const user = await User.findOne({ email: normalizedEmail }).select('+password +resetPasswordOtp +resetPasswordOtpExpire');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No registered account found with this email.',
+      });
+    }
+
+    if (!user.resetPasswordOtp || user.resetPasswordOtp !== cleanOtp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Incorrect verification code. Please check your email.',
+      });
+    }
+
+    if (new Date() > new Date(user.resetPasswordOtpExpire)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification code has expired. Please request a new one.',
+      });
+    }
+
+    // Set new password (will be hashed automatically by userSchema pre-save hook)
+    user.password = password;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpire = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset successfully! You can now sign in with your new password.',
+    });
+  } catch (error) {
+    console.error('[Reset Password Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while resetting password.',
     });
   }
 };

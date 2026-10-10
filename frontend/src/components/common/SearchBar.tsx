@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Search, X, TrendingUp, ArrowUpRight, Sparkles, Tag, ShoppingBag, Flame } from 'lucide-react';
-import { Product } from '../../types';
-import { getProducts } from '../../lib/api';
+import { Search, X, TrendingUp, ArrowUpRight, Sparkles, Tag, ShoppingBag } from 'lucide-react';
+import { Product, Category } from '../../types';
+import { getProducts, getCategories } from '../../lib/api';
 
 interface SearchSuggestion {
   label: string;
@@ -14,38 +14,6 @@ interface SearchSuggestion {
   type: 'category' | 'product' | 'keyword';
   badge?: string;
 }
-
-// Popular athletic catalog suggestions
-const POPULAR_SUGGESTIONS: SearchSuggestion[] = [
-  { label: 'Sports Caps', subtitle: 'Category • Laser-cut & Trucker Caps', queryToRun: 'Sports Caps', type: 'category', badge: 'Caps' },
-  { label: 'Sports T-Shirts', subtitle: 'Category • AeroVent™ & Compression', queryToRun: 'Sports T-Shirts', type: 'category', badge: 'T-Shirts' },
-  { label: 'Track Pants & Joggers', subtitle: 'Category • StormShield & Velocity', queryToRun: 'Track Pants', type: 'category', badge: 'Pants' },
-  { label: 'AeroStrike Laser-Cut Performance Cap', subtitle: 'Sports Caps • ₹999', queryToRun: 'AeroStrike Laser-Cut Performance Cap', type: 'product' },
-  { label: 'Stealth Hydro-Wick Trucker Cap', subtitle: 'Sports Caps • ₹1,099', queryToRun: 'Stealth Hydro-Wick Trucker Cap', type: 'product' },
-  { label: 'Pro-Vent Mesh Seamless Tee', subtitle: 'Sports T-Shirts • ₹1,499', queryToRun: 'Pro-Vent Mesh Seamless Tee', type: 'product' },
-  { label: 'Apex Compression Top', subtitle: 'Sports T-Shirts • ₹1,799', queryToRun: 'Apex Aerodynamic Compression Top', type: 'product' },
-  { label: 'Velocity Tapered Track Pant 2.0', subtitle: 'Track Pants • ₹2,499', queryToRun: 'Velocity Tapered Track Pant 2.0', type: 'product' },
-];
-
-const ATHLETIC_SUGGESTION_DATABASE: SearchSuggestion[] = [
-  // Caps
-  { label: 'Sports Caps', subtitle: 'Category • All Caps & Headwear', queryToRun: 'Sports Caps', type: 'category', badge: 'Category' },
-  { label: 'AeroStrike Laser-Cut Performance Cap', subtitle: 'Sports Caps • ₹999', queryToRun: 'AeroStrike Laser-Cut Performance Cap', type: 'product', badge: 'Cap' },
-  { label: 'Stealth Hydro-Wick Trucker Cap', subtitle: 'Sports Caps • ₹1,099', queryToRun: 'Stealth Hydro-Wick Trucker Cap', type: 'product', badge: 'Cap' },
-  { label: 'Laser-Cut Performance Cap', subtitle: 'Search for Caps', queryToRun: 'Cap', type: 'keyword', badge: 'Keyword' },
-
-  // T-Shirts & Tops
-  { label: 'Sports T-Shirts', subtitle: 'Category • All Athletic Tees & Tops', queryToRun: 'Sports T-Shirts', type: 'category', badge: 'Category' },
-  { label: 'Pro-Vent Mesh Seamless Tee', subtitle: 'Sports T-Shirts • ₹1,499', queryToRun: 'Pro-Vent Mesh Seamless Tee', type: 'product', badge: 'T-Shirt' },
-  { label: 'Apex Aerodynamic Compression Top', subtitle: 'Sports T-Shirts • ₹1,799', queryToRun: 'Apex Aerodynamic Compression Top', type: 'product', badge: 'T-Shirt' },
-  { label: 'Kinetic Swift-Dry Training Shirt', subtitle: 'Sports T-Shirts • ₹1,299', queryToRun: 'Kinetic Swift-Dry Training Shirt', type: 'product', badge: 'T-Shirt' },
-  { label: 'Endurance Core Heavyweight Tee', subtitle: 'Sports T-Shirts • ₹1,399', queryToRun: 'Endurance Core Heavyweight Tee', type: 'product', badge: 'T-Shirt' },
-
-  // Track Pants
-  { label: 'Track Pants', subtitle: 'Category • All Track Pants & Joggers', queryToRun: 'Track Pants', type: 'category', badge: 'Category' },
-  { label: 'Velocity Tapered Track Pant 2.0', subtitle: 'Track Pants • ₹2,499', queryToRun: 'Velocity Tapered Track Pant 2.0', type: 'product', badge: 'Track Pant' },
-  { label: 'StormShield Weather-Resistant Jogger', subtitle: 'Track Pants • ₹2,799', queryToRun: 'StormShield Weather-Resistant Jogger', type: 'product', badge: 'Track Pant' },
-];
 
 interface SearchBarProps {
   onSearchSubmit?: (query: string) => void;
@@ -60,6 +28,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [matchedProducts, setMatchedProducts] = useState<Product[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -75,6 +44,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         setQuery(urlSearch);
       }
     }
+  }, []);
+
+  // Fetch dynamic categories
+  useEffect(() => {
+    async function loadDynamicCategories() {
+      try {
+        const res = await getCategories();
+        if (res.success && res.data) {
+          setCategories(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to load categories in search:', err);
+      }
+    }
+    loadDynamicCategories();
   }, []);
 
   // Load recent searches from localStorage
@@ -111,48 +95,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const timer = setTimeout(async () => {
       const trimmed = query.trim().toLowerCase();
 
-      // 1. Filter structured suggestions from database
-      const filtered = ATHLETIC_SUGGESTION_DATABASE.filter((item) => {
-        const lMatch = item.label.toLowerCase().includes(trimmed);
-        const qMatch = item.queryToRun.toLowerCase().includes(trimmed);
-        const subMatch = item.subtitle ? item.subtitle.toLowerCase().includes(trimmed) : false;
-        return lMatch || qMatch || subMatch;
-      });
-
-      // If user typed "cap" or "caps", ensure Sports Caps is top suggestion
-      if (trimmed.includes('cap') && !filtered.some(s => s.queryToRun === 'Sports Caps')) {
-        filtered.unshift({
-          label: 'Sports Caps',
-          subtitle: 'Category • All Caps & Headwear',
-          queryToRun: 'Sports Caps',
-          type: 'category',
+      // 1. Dynamic category suggestions
+      const matchingCats = categories
+        .filter((cat) => cat.name.toLowerCase().includes(trimmed) || (cat.description && cat.description.toLowerCase().includes(trimmed)))
+        .map((cat) => ({
+          label: cat.name,
+          subtitle: `Category • ${cat.description ? cat.description.slice(0, 40) + '...' : 'Athletic Gear'}`,
+          queryToRun: cat.name,
+          type: 'category' as const,
           badge: 'Category',
-        });
-      }
+        }));
 
-      // If user typed "t-shirt" or "tshirt" or "tee"
-      if ((trimmed.includes('tshirt') || trimmed.includes('t-shirt') || trimmed.includes('tee') || trimmed.includes('shirt')) && !filtered.some(s => s.queryToRun === 'Sports T-Shirts')) {
-        filtered.unshift({
-          label: 'Sports T-Shirts',
-          subtitle: 'Category • All Athletic Tees & Tops',
-          queryToRun: 'Sports T-Shirts',
-          type: 'category',
-          badge: 'Category',
-        });
-      }
-
-      // If user typed "pant" or "jogger" or "track"
-      if ((trimmed.includes('pant') || trimmed.includes('jogger') || trimmed.includes('track')) && !filtered.some(s => s.queryToRun === 'Track Pants')) {
-        filtered.unshift({
-          label: 'Track Pants',
-          subtitle: 'Category • All Track Pants & Joggers',
-          queryToRun: 'Track Pants',
-          type: 'category',
-          badge: 'Category',
-        });
-      }
-
-      setSuggestions(filtered.slice(0, 6));
+      setSuggestions(matchingCats.slice(0, 5));
 
       // 2. Fetch live matching products from API
       try {
@@ -166,7 +120,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, categories]);
 
   const saveRecentSearch = (term: string) => {
     try {
@@ -295,43 +249,45 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 </div>
               )}
 
-              <div>
-                <div className="flex items-center gap-1.5 text-[11px] font-headline font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                  <TrendingUp className="w-3.5 h-3.5 text-red-600" />
-                  <span>Popular Gear Categories</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {POPULAR_SUGGESTIONS.map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleExecuteSearch(item.queryToRun);
-                      }}
-                      onClick={() => {
-                        handleExecuteSearch(item.queryToRun);
-                      }}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-50 text-left transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-md bg-neutral-100 group-hover:bg-red-50 text-neutral-600 group-hover:text-red-600 flex items-center justify-center shrink-0 transition-colors">
-                          <Tag className="w-3.5 h-3.5" />
+              {categories.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 text-[11px] font-headline font-bold uppercase tracking-wider text-neutral-400 mb-2">
+                    <TrendingUp className="w-3.5 h-3.5 text-red-600" />
+                    <span>Popular Gear Categories</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat._id}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleExecuteSearch(cat.name);
+                        }}
+                        onClick={() => {
+                          handleExecuteSearch(cat.name);
+                        }}
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-50 text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-neutral-100 group-hover:bg-red-50 text-neutral-600 group-hover:text-red-600 flex items-center justify-center shrink-0 transition-colors">
+                            <Tag className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-neutral-800 group-hover:text-red-600 truncate transition-colors">
+                              {cat.name}
+                            </p>
+                            {cat.description && (
+                              <p className="text-[10px] text-neutral-400 truncate">{cat.description}</p>
+                            )}
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-neutral-800 group-hover:text-red-600 truncate transition-colors">
-                            {item.label}
-                          </p>
-                          {item.subtitle && (
-                            <p className="text-[10px] text-neutral-400 truncate">{item.subtitle}</p>
-                          )}
-                        </div>
-                      </div>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-red-600 transition-colors shrink-0" />
-                    </button>
-                  ))}
+                        <ArrowUpRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-red-600 transition-colors shrink-0" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 

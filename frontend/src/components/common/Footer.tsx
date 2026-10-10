@@ -1,10 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { getCategories } from '../../lib/api';
+import { Category } from '../../types';
 
 export const Footer: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    async function loadCats() {
+      try {
+        const res = await getCategories();
+        if (res.success && res.data) {
+          setCategories(res.data);
+        }
+      } catch (e) {
+        console.error('Footer category fetch error', e);
+      }
+    }
+    loadCats();
+  }, []);
+
   return (
     <footer className="bg-neutral-50 text-neutral-900 border-t border-neutral-200 pt-12 pb-12">
       {/* Main Footer Links & Newsletter */}
@@ -42,17 +60,29 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 1: Gear */}
+          {/* Column 1: Dynamic Collections */}
           <div>
             <h5 className="font-headline text-base font-bold uppercase tracking-wider text-neutral-950 mb-4">
               COLLECTIONS
             </h5>
             <ul className="space-y-2.5 text-sm text-neutral-600">
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">Pro-Vent T-Shirts</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">Velocity Track Pants</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">Laser-Cut Sports Caps</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">Compression Gear</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">New Releases</a></li>
+              {categories.length > 0 ? (
+                categories.map((cat) => (
+                  <li key={cat._id}>
+                    <Link
+                      href={`/products?category=${encodeURIComponent(cat.slug || cat.name)}`}
+                      className="hover:text-red-600 transition-colors"
+                    >
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li><Link href="/products" className="hover:text-red-600 transition-colors">All Athletic Gear</Link></li>
+                  <li><Link href="/products" className="hover:text-red-600 transition-colors">New Drops</Link></li>
+                </>
+              )}
             </ul>
           </div>
 

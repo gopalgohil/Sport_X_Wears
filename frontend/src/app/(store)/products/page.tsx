@@ -10,156 +10,15 @@ import ProductGrid from '../../../components/product/ProductGrid';
 import ProductFilter from '../../../components/product/ProductFilter';
 import { getProducts, getCategories } from '../../../lib/api';
 
-const STITCH_PRODUCTS: Product[] = [
-  {
-    _id: 'prod-1',
-    title: 'Pro-Vent Mesh Seamless Tee',
-    slug: 'pro-vent-mesh-seamless-tee',
-    category: 'Sports T-Shirts',
-    description: 'Engineered with AeroVent™ 4-way micro-cooling mesh and zero-abrasion seam technology.',
-    price: 1899,
-    discountPrice: 1499,
-    sizes: ['S', 'M', 'L', 'XL'],
-    images: [
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 5,
-    isActive: true,
-    badge: 'SAVE 21%',
-    tech: 'AEROVENT™',
-  },
-  {
-    _id: 'prod-2',
-    title: 'Apex Aerodynamic Compression Top',
-    slug: 'apex-aerodynamic-compression-top',
-    category: 'Sports T-Shirts',
-    description: 'Targeted muscle compression with thermo-reactive heat dispersal channels.',
-    price: 2299,
-    discountPrice: 1799,
-    sizes: ['M', 'L', 'XL'],
-    images: [
-      'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 8,
-    isActive: true,
-    badge: 'SAVE 22%',
-    tech: 'THERMOFLEX™',
-  },
-  {
-    _id: 'prod-3',
-    title: 'Kinetic Swift-Dry Training Shirt',
-    slug: 'kinetic-swift-dry-training-shirt',
-    category: 'Sports T-Shirts',
-    description: 'Ultra-lightweight fabric engineered for multi-sport agility.',
-    price: 1299,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    images: [
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 15,
-    isActive: true,
-    badge: 'NEW RELEASE',
-    tech: 'SWIFT-DRY',
-  },
-  {
-    _id: 'prod-4',
-    title: 'Velocity Tapered Track Pant 2.0',
-    slug: 'velocity-tapered-track-pant-2',
-    category: 'Track Pants',
-    description: 'Ergonomic tapered silhouette with water-repellent flex weave.',
-    price: 2999,
-    discountPrice: 2499,
-    sizes: ['S', 'M', 'L', 'XL'],
-    images: [
-      'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 12,
-    isActive: true,
-    badge: 'SAVE 17%',
-    tech: 'DURASHIELD™',
-  },
-  {
-    _id: 'prod-5',
-    title: 'StormShield Weather-Resistant Jogger',
-    slug: 'stormshield-weather-resistant-jogger',
-    category: 'Track Pants',
-    description: 'Windproof micro-ripstop shell bonded to a brushed fleece thermal liner.',
-    price: 2799,
-    sizes: ['M', 'L', 'XL'],
-    images: [
-      'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 10,
-    isActive: true,
-    badge: 'ALL-WEATHER',
-    tech: 'STORMSHIELD™',
-  },
-  {
-    _id: 'prod-6',
-    title: 'AeroStrike Laser-Cut Performance Cap',
-    slug: 'aerostrike-laser-cut-performance-cap',
-    category: 'Sports Caps',
-    description: 'Ultralight structured crown with 48 laser-cut heat vent ports.',
-    price: 1299,
-    discountPrice: 999,
-    sizes: ['S', 'M', 'L', 'XL'],
-    images: [
-      'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 20,
-    isActive: true,
-    badge: 'SAVE 23%',
-    tech: 'AEROVENT™',
-  },
-  {
-    _id: 'prod-7',
-    title: 'Stealth Hydro-Wick Trucker Cap',
-    slug: 'stealth-hydro-wick-trucker-cap',
-    category: 'Sports Caps',
-    description: 'Breathable ballistic mesh back panels paired with water-resistant front crown.',
-    price: 1099,
-    sizes: ['M', 'L'],
-    images: [
-      'https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 14,
-    isActive: true,
-    badge: 'TRENDING',
-    tech: 'HYDRO-WICK',
-  },
-  {
-    _id: 'prod-8',
-    title: 'Endurance Core Heavyweight Tee',
-    slug: 'endurance-core-heavyweight-tee',
-    category: 'Sports T-Shirts',
-    description: 'Premium heavyweight athletic cotton-poly blend with boxy athletic cut.',
-    price: 1699,
-    discountPrice: 1399,
-    sizes: ['S', 'M', 'L', 'XL'],
-    images: [
-      'https://images.unsplash.com/photo-1527719327859-c6ce80353573?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 9,
-    isActive: true,
-    badge: 'SAVE 20%',
-    tech: 'DURASHIELD™',
-  },
-];
-
 export default function ProductsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
   const [selectedSize, setSelectedSize] = useState('ALL');
   const [sortBy, setSortBy] = useState('featured');
-  const [categoriesList, setCategoriesList] = useState<string[]>([
-    'ALL GEAR',
-    'Sports T-Shirts',
-    'Track Pants',
-    'Sports Caps',
-  ]);
-  const [products, setProducts] = useState<Product[]>(STITCH_PRODUCTS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [categoriesList, setCategoriesList] = useState<string[]>(['ALL GEAR']);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -190,73 +49,20 @@ export default function ProductsPage() {
       setIsLoading(true);
       try {
         const res = await getProducts({
-          category: searchQuery.trim() ? undefined : selectedCategory,
-          size: selectedSize,
+          category: selectedCategory !== 'ALL GEAR' ? selectedCategory : undefined,
+          size: selectedSize !== 'ALL' ? selectedSize : undefined,
           sort: sortBy,
           search: searchQuery.trim() || undefined,
         });
 
-        const applyRelevanceFilter = (items: Product[], rawQuery: string) => {
-          const q = rawQuery.toLowerCase().trim();
-          const isCap = q.includes('cap');
-          const isTee = q.includes('tshirt') || q.includes('t-shirt') || q.includes('tee') || q.includes('shirt') || q.includes('top');
-          const isPant = q.includes('pant') || q.includes('jogger') || q.includes('track');
-
-          return items.filter((p) => {
-            const catName = typeof p.category === 'string' ? p.category : p.category?.name || '';
-            const titleLower = p.title.toLowerCase();
-            const descLower = p.description.toLowerCase();
-            const catLower = catName.toLowerCase();
-            const techLower = (p.tech || '').toLowerCase();
-
-            if (isCap && !isTee && !isPant) {
-              return titleLower.includes('cap') || catLower.includes('cap') || descLower.includes('cap');
-            }
-            if (isTee && !isCap && !isPant) {
-              return (
-                titleLower.includes('tee') ||
-                titleLower.includes('shirt') ||
-                titleLower.includes('top') ||
-                catLower.includes('t-shirt') ||
-                catLower.includes('shirt') ||
-                descLower.includes('shirt')
-              );
-            }
-            if (isPant && !isCap && !isTee) {
-              return (
-                titleLower.includes('pant') ||
-                titleLower.includes('jogger') ||
-                catLower.includes('track') ||
-                descLower.includes('pant')
-              );
-            }
-
-            return (
-              titleLower.includes(q) ||
-              catLower.includes(q) ||
-              descLower.includes(q) ||
-              techLower.includes(q)
-            );
-          });
-        };
-
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          if (searchQuery.trim()) {
-            setProducts(applyRelevanceFilter(res.data, searchQuery));
-          } else {
-            setProducts(res.data);
-          }
-        } else if (searchQuery.trim()) {
-          const matched = applyRelevanceFilter(STITCH_PRODUCTS, searchQuery);
-          setProducts(matched);
-        } else if (selectedCategory === 'ALL GEAR' && selectedSize === 'ALL') {
-          setProducts(STITCH_PRODUCTS);
+        if (res.success && Array.isArray(res.data)) {
+          setProducts(res.data);
         } else {
-          setProducts(res.data || []);
+          setProducts([]);
         }
       } catch (err) {
         console.error('Failed to load products:', err);
-        setProducts(STITCH_PRODUCTS);
+        setProducts([]);
       } finally {
         setIsLoading(false);
       }

@@ -18,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 
 import SearchBar from './SearchBar';
 import CartDrawer from '../cart/CartDrawer';
+import MobileBottomNav from './MobileBottomNav';
 
 interface NavbarProps {
   onSearchSubmit?: (query: string) => void;
@@ -67,9 +68,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
           {/* Utility Icons (Search, Auth/Profile, Wishlist, Cart) */}
           <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
 
-            {/* Dynamic Authentication / Profile Menu */}
+            {/* Dynamic Authentication / Profile Menu (Desktop only, mobile uses Bottom Nav) */}
             {isAuthenticated && user ? (
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative hidden md:block" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -136,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-headline font-bold uppercase tracking-wider text-neutral-900 hover:text-red-600 transition-colors"
+                className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-headline font-bold uppercase tracking-wider text-neutral-900 hover:text-red-600 transition-colors"
               >
                 <UserIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">SIGN IN</span>
@@ -178,6 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
       </div>
     </header>
     <CartDrawer />
+    <MobileBottomNav />
     </>
   );
 };

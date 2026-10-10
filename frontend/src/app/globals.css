@@ -12,6 +12,13 @@ body {
   background-color: #ffffff;
   color: #171717;
   overflow-x: hidden;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
 }
 
 .font-headline {

@@ -213,12 +213,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
-      {/* Search Input Box (Amazon / Flipkart Style) */}
+      {/* Search Input Box */}
       <div className="relative flex items-center w-full group">
-        <div className="absolute left-3 sm:left-3.5 pointer-events-none flex items-center text-neutral-400 group-focus-within:text-red-600 transition-colors">
-          <Search className="w-4 h-4" />
-        </div>
-
         <input
           ref={inputRef}
           type="text"
@@ -229,13 +225,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder='Search "caps", "t-shirts", "track pants"...'
+          placeholder="Search"
           aria-label="Search products, brands and categories"
-          className="w-full pl-9 sm:pl-10 pr-16 sm:pr-24 py-2 sm:py-2 bg-neutral-100 hover:bg-neutral-100/90 focus:bg-white text-neutral-900 placeholder:text-neutral-500 text-xs sm:text-sm font-medium border border-neutral-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 rounded-full sm:rounded-lg transition-all shadow-inner outline-none"
+          className="w-full pl-4 sm:pl-4.5 pr-14 sm:pr-16 py-2 sm:py-2.5 bg-neutral-100 hover:bg-neutral-100/90 focus:bg-white text-neutral-900 placeholder:text-neutral-500 text-xs sm:text-sm font-medium border border-neutral-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 rounded-full sm:rounded-lg transition-all shadow-xs outline-none"
         />
 
-        {/* Right Action Icons (Clear button + Search Button) */}
-        <div className="absolute right-1 sm:right-1.5 flex items-center gap-1">
+        {/* Right Action Icons (Clear X and Search Magnifying Icon) */}
+        <div className="absolute right-2 sm:right-3 flex items-center gap-1">
           {query && (
             <button
               type="button"
@@ -250,11 +246,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <button
             type="button"
             onClick={() => handleExecuteSearch(query)}
-            className="bg-neutral-950 hover:bg-red-600 text-white p-1.5 sm:px-3 sm:py-1 rounded-full sm:rounded text-[11px] font-headline font-extrabold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1"
+            className="p-1.5 text-neutral-400 hover:text-red-600 group-focus-within:text-red-600 transition-colors cursor-pointer flex items-center justify-center rounded-full hover:bg-neutral-200/60"
             aria-label="Submit search"
           >
-            <Search className="w-3.5 h-3.5 sm:hidden" />
-            <span className="hidden sm:inline">SEARCH</span>
+            <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
         </div>
       </div>

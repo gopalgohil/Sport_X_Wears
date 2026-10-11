@@ -3,9 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ShoppingCart,
-  ShoppingBag,
-  Search,
   Heart,
   User as UserIcon,
   LogOut,
@@ -13,9 +10,7 @@ import {
   ShieldCheck,
   ChevronDown,
   Bell,
-  CheckCircle2,
 } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 
@@ -29,7 +24,6 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick }) => {
-  const { totalItems, openCart } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   const { unreadCount, notifications, markAsRead, markAllAsRead, requestNotificationPermission } = useSocket();
 
@@ -65,12 +59,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-neutral-200">
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-20 gap-2 sm:gap-3">
-          {/* Athletic Brand Logo */}
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-3">
+          {/* Athletic Brand Logo (Enlarged) */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="flex items-center group">
-              <span className="font-headline text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tighter uppercase italic text-neutral-950 flex items-center">
-                SPORT <span className="text-red-600 px-0.5 sm:px-1 transform -skew-x-12 inline-block">X</span> WEAR
+              <span className="font-headline text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter uppercase italic text-neutral-950 flex items-center transition-transform group-hover:scale-[1.02]">
+                SPORT <span className="text-red-600 px-1 sm:px-1.5 transform -skew-x-12 inline-block">X</span> WEAR
               </span>
             </Link>
           </div>
@@ -80,104 +74,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
             <SearchBar onSearchSubmit={onSearchSubmit} />
           </div>
 
-          {/* Utility Icons (Search, Auth/Profile, Wishlist, Notifications, Cart) */}
-          <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-
-            {/* Notification Bell (Live socket updates for Customer) */}
-            {isAuthenticated && (
-              <div className="relative" ref={notifRef}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotifDropdownOpen(!notifDropdownOpen);
-                    requestNotificationPermission();
-                  }}
-                  className="p-2 text-neutral-800 hover:text-red-600 transition-colors cursor-pointer relative"
-                  aria-label="Order Alerts"
-                >
-                  <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-red-600 animate-pulse' : ''}`} />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-red-600 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-bounce">
-                      {badgeText}
-                    </span>
-                  )}
-                </button>
-
-                {/* Customer Notification Dropdown */}
-                {notifDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-neutral-200 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                    <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-headline text-xs font-black uppercase tracking-wider text-neutral-900">
-                          Order Alerts
-                        </span>
-                        {unreadCount > 0 && (
-                          <span className="px-1.5 py-0.2 rounded-full bg-red-100 text-red-600 text-[10px] font-bold">
-                            {unreadCount} new
-                          </span>
-                        )}
-                      </div>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={() => markAllAsRead()}
-                          className="text-[10px] text-neutral-500 hover:text-red-600 font-semibold"
-                        >
-                          Mark all read
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="max-h-72 overflow-y-auto divide-y divide-neutral-100">
-                      {notifications.length === 0 ? (
-                        <div className="py-8 text-center text-neutral-400">
-                          <Bell className="w-6 h-6 mx-auto mb-1 opacity-40" />
-                          <p className="text-xs">No alerts yet</p>
-                        </div>
-                      ) : (
-                        notifications.slice(0, 5).map((n) => (
-                          <div
-                            key={n._id}
-                            onClick={() => markAsRead(n._id)}
-                            className={`p-3 hover:bg-neutral-50 transition cursor-pointer flex items-start gap-2.5 ${
-                              !n.read ? 'bg-red-50/40' : ''
-                            }`}
-                          >
-                            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                              <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-neutral-900 truncate">
-                                {n.title}
-                              </p>
-                              <p className="text-[11px] text-neutral-600 line-clamp-2 mt-0.5">
-                                {n.message}
-                              </p>
-                              <span className="text-[9px] text-neutral-400 mt-1 block">
-                                {new Date(n.createdAt).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="px-3 pt-2 border-t border-neutral-100 text-center">
-                      <Link
-                        href="/profile"
-                        onClick={() => setNotifDropdownOpen(false)}
-                        className="text-[11px] font-bold text-red-600 hover:underline block py-1"
-                      >
-                        View My Orders →
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
+          {/* Utility Icons (Search, Auth/Profile, Wishlist, Notifications) */}
+          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
             {/* Dynamic Authentication / Profile Menu (Desktop only, mobile uses Bottom Nav) */}
             {isAuthenticated && user ? (
               <div className="relative hidden md:block" ref={dropdownRef}>
@@ -263,23 +161,130 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
               <Heart className="w-5 h-5" />
             </button>
 
-            {/* Cart Trigger */}
-            <button
-              onClick={openCart}
-              type="button"
-              className="relative p-2 text-neutral-900 hover:text-red-600 transition-colors cursor-pointer group"
-              aria-label={`Shopping Cart with ${totalItems} items`}
-            >
-              <div className="relative inline-flex items-center justify-center">
-                {/* Shopping Trolley Icon */}
-                <ShoppingCart className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2] transition-transform group-hover:scale-105" />
-                
-                {/* Cart item count placed above trolley in black */}
-                <span className="absolute -top-1 left-[52%] -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black leading-none select-none pointer-events-none">
-                  {totalItems}
-                </span>
-              </div>
-            </button>
+            {/* Dynamic Notification Bell Trigger (In place of Cart Icon) */}
+            <div className="relative" ref={notifRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setNotifDropdownOpen(!notifDropdownOpen);
+                  if (isAuthenticated) {
+                    requestNotificationPermission();
+                  }
+                }}
+                className="relative p-2 text-neutral-900 hover:text-red-600 transition-colors cursor-pointer group"
+                aria-label="Order & Store Notifications"
+              >
+                <div className="relative inline-flex items-center justify-center">
+                  <Bell className={`w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2] transition-transform group-hover:scale-110 ${
+                    unreadCount > 0 ? 'text-red-600 animate-pulse' : 'text-neutral-900'
+                  }`} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] sm:text-[11px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-bounce">
+                      {badgeText}
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {/* Dynamic Notification Dropdown */}
+              {notifDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-neutral-200/90 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+                      <span className="font-headline text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-950">
+                        Live Notifications
+                      </span>
+                      {unreadCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px] font-black">
+                          {unreadCount} NEW
+                        </span>
+                      )}
+                    </div>
+                    {isAuthenticated && unreadCount > 0 && (
+                      <button
+                        onClick={() => markAllAsRead()}
+                        className="text-[11px] text-neutral-500 hover:text-red-600 font-bold tracking-tight cursor-pointer"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto divide-y divide-neutral-100">
+                    {!isAuthenticated ? (
+                      <div className="py-8 px-4 text-center">
+                        <Bell className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-neutral-800">Sign in for Live Updates</p>
+                        <p className="text-[11px] text-neutral-400 mt-1 mb-3">
+                          Receive real-time order alerts, status tracking, and dispatch updates directly to your device.
+                        </p>
+                        <Link
+                          href="/login"
+                          onClick={() => setNotifDropdownOpen(false)}
+                          className="inline-block px-4 py-1.5 bg-neutral-950 text-white text-xs font-headline font-black uppercase tracking-wider rounded-lg hover:bg-red-600 transition"
+                        >
+                          Sign In Now
+                        </Link>
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="py-8 text-center text-neutral-400">
+                        <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-xs font-semibold text-neutral-600">No new notifications</p>
+                        <p className="text-[10px] text-neutral-400 mt-0.5">You're completely up to date!</p>
+                      </div>
+                    ) : (
+                      notifications.slice(0, 8).map((n) => (
+                        <div
+                          key={n._id}
+                          onClick={() => markAsRead(n._id)}
+                          className={`p-3.5 hover:bg-neutral-50 transition cursor-pointer flex items-start gap-3 ${
+                            !n.read ? 'bg-red-50/50' : ''
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                            !n.read ? 'bg-red-600 text-white' : 'bg-neutral-100 text-neutral-600'
+                          }`}>
+                            <Package className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-xs font-extrabold text-neutral-950 truncate">
+                                {n.title}
+                              </p>
+                              {!n.read && (
+                                <span className="w-2 h-2 rounded-full bg-red-600 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[11px] text-neutral-600 leading-snug mt-0.5 line-clamp-2">
+                              {n.message}
+                            </p>
+                            <span className="text-[9px] text-neutral-400 font-medium mt-1 block">
+                              {new Date(n.createdAt).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {isAuthenticated && (
+                    <div className="p-2.5 border-t border-neutral-100 bg-neutral-50/60 text-center">
+                      <Link
+                        href="/profile"
+                        onClick={() => setNotifDropdownOpen(false)}
+                        className="text-xs font-headline font-bold text-red-600 hover:text-red-700 uppercase tracking-wider block py-1"
+                      >
+                        View My Orders & History &rarr;
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

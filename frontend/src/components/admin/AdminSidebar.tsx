@@ -15,8 +15,10 @@ import {
   ChevronRight,
   X,
   Users,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useSocket } from '@/context/SocketContext';
 
 interface AdminSidebarProps {
   isOpen?: boolean;
@@ -26,6 +28,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { unreadCount } = useSocket();
 
   const navigation = [
     {
@@ -33,6 +36,13 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
       href: '/admin',
       icon: LayoutDashboard,
       exact: true,
+    },
+    {
+      name: 'Notifications',
+      href: '/admin/notifications',
+      icon: Bell,
+      exact: false,
+      badge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : String(unreadCount)) : undefined,
     },
     {
       name: 'Athletes & Users',
@@ -150,7 +160,20 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
                   />
                   <span>{item.name}</span>
                 </div>
-                {active && <ChevronRight className="w-4 h-4 text-white/80" />}
+                <div className="flex items-center gap-1.5">
+                  {item.badge && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm ${
+                        active
+                          ? 'bg-white text-red-600'
+                          : 'bg-red-600 text-white animate-pulse'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                  {active && <ChevronRight className="w-4 h-4 text-white/80" />}
+                </div>
               </Link>
             );
           })}

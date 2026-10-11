@@ -12,9 +12,12 @@ import {
   Package,
   ShieldCheck,
   ChevronDown,
+  Bell,
+  CheckCircle2,
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 
 import SearchBar from './SearchBar';
 import CartDrawer from '../cart/CartDrawer';
@@ -28,8 +31,12 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick }) => {
   const { totalItems, openCart } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
+  const { unreadCount, notifications, markAsRead, markAllAsRead, requestNotificationPermission } = useSocket();
+
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -40,10 +47,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
       ) {
         setUserDropdownOpen(false);
       }
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
+        setNotifDropdownOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const badgeText = unreadCount > 9 ? '9+' : unreadCount;
 
   return (
     <>
@@ -65,8 +80,103 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
             <SearchBar onSearchSubmit={onSearchSubmit} />
           </div>
 
-          {/* Utility Icons (Search, Auth/Profile, Wishlist, Cart) */}
+          {/* Utility Icons (Search, Auth/Profile, Wishlist, Notifications, Cart) */}
           <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
+
+            {/* Notification Bell (Live socket updates for Customer) */}
+            {isAuthenticated && (
+              <div className="relative" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotifDropdownOpen(!notifDropdownOpen);
+                    requestNotificationPermission();
+                  }}
+                  className="p-2 text-neutral-800 hover:text-red-600 transition-colors cursor-pointer relative"
+                  aria-label="Order Alerts"
+                >
+                  <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-red-600 animate-pulse' : ''}`} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 bg-red-600 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-bounce">
+                      {badgeText}
+                    </span>
+                  )}
+                </button>
+
+                {/* Customer Notification Dropdown */}
+                {notifDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-neutral-200 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-headline text-xs font-black uppercase tracking-wider text-neutral-900">
+                          Order Alerts
+                        </span>
+                        {unreadCount > 0 && (
+                          <span className="px-1.5 py-0.2 rounded-full bg-red-100 text-red-600 text-[10px] font-bold">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={() => markAllAsRead()}
+                          className="text-[10px] text-neutral-500 hover:text-red-600 font-semibold"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-72 overflow-y-auto divide-y divide-neutral-100">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-neutral-400">
+                          <Bell className="w-6 h-6 mx-auto mb-1 opacity-40" />
+                          <p className="text-xs">No alerts yet</p>
+                        </div>
+                      ) : (
+                        notifications.slice(0, 5).map((n) => (
+                          <div
+                            key={n._id}
+                            onClick={() => markAsRead(n._id)}
+                            className={`p-3 hover:bg-neutral-50 transition cursor-pointer flex items-start gap-2.5 ${
+                              !n.read ? 'bg-red-50/40' : ''
+                            }`}
+                          >
+                            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                              <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-neutral-900 truncate">
+                                {n.title}
+                              </p>
+                              <p className="text-[11px] text-neutral-600 line-clamp-2 mt-0.5">
+                                {n.message}
+                              </p>
+                              <span className="text-[9px] text-neutral-400 mt-1 block">
+                                {new Date(n.createdAt).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="px-3 pt-2 border-t border-neutral-100 text-center">
+                      <Link
+                        href="/profile"
+                        onClick={() => setNotifDropdownOpen(false)}
+                        className="text-[11px] font-bold text-red-600 hover:underline block py-1"
+                      >
+                        View My Orders →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Dynamic Authentication / Profile Menu (Desktop only, mobile uses Bottom Nav) */}
             {isAuthenticated && user ? (

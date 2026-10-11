@@ -1,5 +1,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import Notification from '../models/Notification.js';
+import { broadcastNewOrder, sendOrderStatusUpdate } from '../socket.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 
@@ -90,6 +92,28 @@ export const createOrder = asyncHandler(async (req, res) => {
     totalAmount: finalTotal,
     orderStatus: 'processing',
   });
+
+  // Create real-time notification for Admin Dashboard
+  try {
+    const notification = await Notification.create({
+      recipientRole: 'admin',
+      title: 'New Athlete Order Placed! ⚡',
+      message: `${customer.name.trim()} placed order #${order._id.toString().slice(-6)} for ₹${order.totalAmount.toLocaleString('en-IN')}`,
+      type: 'new_order',
+      order: order._id,
+      meta: {
+        customerName: customer.name.trim(),
+        customerEmail: customer.email.trim().toLowerCase(),
+        totalAmount: order.totalAmount,
+        orderStatus: order.orderStatus,
+        itemsCount: processedItems.reduce((acc, curr) => acc + curr.quantity, 0),
+      },
+    });
+
+    broadcastNewOrder(notification);
+  } catch (notifErr) {
+    console.error('[Notification Dispatch Error]:', notifErr.message);
+  }
 
   res.status(201).json({
     success: true,
@@ -214,6 +238,39 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   if (!order) {
     throw new ApiError(404, 'Order not found');
+  }
+
+  // Dispatch real-time notification to Customer & Admin
+  try {
+    const statusMessages = {
+      processing: 'Order accepted! Preparing high-performance gear for dispatch.',
+      shipped: 'Order dispatched! Your athletic apparel is on the move.',
+      delivered: 'Order delivered successfully! Welcome to the champion circle.',
+      cancelled: 'Order was cancelled.',
+    };
+
+    const statusTitle = orderStatus === 'processing'
+      ? `Order #${order._id.toString().slice(-6)} Accepted!`
+      : `Order #${order._id.toString().slice(-6)}: ${orderStatus.toUpperCase()}`;
+
+    const notification = await Notification.create({
+      recipient: order.user || null,
+      recipientRole: 'customer',
+      title: statusTitle,
+      message: statusMessages[orderStatus] || `Your order status was updated to ${orderStatus}.`,
+      type: 'order_status',
+      order: order._id,
+      meta: {
+        customerName: order.customer.name,
+        customerEmail: order.customer.email,
+        totalAmount: order.totalAmount,
+        orderStatus: order.orderStatus,
+      },
+    });
+
+    sendOrderStatusUpdate(order.user ? order.user.toString() : null, notification);
+  } catch (notifErr) {
+    console.error('[Status Notification Error]:', notifErr.message);
   }
 
   res.status(200).json({

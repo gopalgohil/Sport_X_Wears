@@ -3,6 +3,7 @@ import { Barlow_Condensed, Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider } from '../context/AuthContext';
+import { SocketProvider } from '../context/SocketContext';
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ['latin'],
@@ -32,9 +33,11 @@ export default function RootLayout({
     <html lang="en" className={`${barlowCondensed.variable} ${inter.variable}`}>
       <body className="antialiased min-h-screen flex flex-col bg-white text-neutral-900 selection:bg-red-600 selection:text-white">
         <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <SocketProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>

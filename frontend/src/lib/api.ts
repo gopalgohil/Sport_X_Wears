@@ -1,4 +1,4 @@
-import { Product, Category, User, AuthResponse, Order } from '../types';
+import { Product, Category, User, AuthResponse, Order, NotificationItem, NotificationsResponse } from '../types';
 import { FALLBACK_PRODUCTS, FALLBACK_CATEGORIES } from './initialData';
 
 const API_BASE_URL =
@@ -734,6 +734,118 @@ export async function deleteUserAdmin(
     throw new Error(data.message || 'Failed to delete user');
   }
 
+  return data;
+}
+
+/**
+ * Fetch live notifications for current user/admin
+ */
+export async function getNotifications(
+  token?: string | null
+): Promise<NotificationsResponse> {
+  const url = `${API_BASE_URL}/notifications`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { method: 'GET', headers });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch notifications');
+  }
+  return data;
+}
+
+/**
+ * Mark a single notification as read
+ */
+export async function markNotificationRead(
+  id: string,
+  token?: string | null
+): Promise<{ success: boolean; data: NotificationItem }> {
+  const url = `${API_BASE_URL}/notifications/${id}/read`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { method: 'PUT', headers });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to mark notification as read');
+  }
+  return data;
+}
+
+/**
+ * Mark all notifications as read
+ */
+export async function markAllNotificationsRead(
+  token?: string | null
+): Promise<{ success: boolean; message: string }> {
+  const url = `${API_BASE_URL}/notifications/read-all`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { method: 'PUT', headers });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to mark all notifications as read');
+  }
+  return data;
+}
+
+/**
+ * Delete a single notification
+ */
+export async function deleteNotification(
+  id: string,
+  token?: string | null
+): Promise<{ success: boolean; message: string }> {
+  const url = `${API_BASE_URL}/notifications/${id}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { method: 'DELETE', headers });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to delete notification');
+  }
+  return data;
+}
+
+/**
+ * Clear all notifications
+ */
+export async function clearAllNotifications(
+  token?: string | null
+): Promise<{ success: boolean; message: string }> {
+  const url = `${API_BASE_URL}/notifications/clear-all`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { method: 'DELETE', headers });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to clear notifications');
+  }
   return data;
 }
 

@@ -1,8 +1,10 @@
 import 'dotenv/config';
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
+import { initSocket } from './socket.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 // Route Imports
@@ -10,6 +12,7 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -74,11 +77,13 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Centralized 404 Catch-All Handler
 app.use(notFoundHandler);
@@ -94,8 +99,11 @@ const startServer = async () => {
       console.warn(`[Warning] Database initial connection failed: ${err.message}. Server starting in offline mode.`);
     });
 
-    const server = app.listen(PORT, () => {
-      console.log(`[SPORT X WEAR] Enterprise API running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
+    const httpServer = http.createServer(app);
+    initSocket(httpServer);
+
+    const server = httpServer.listen(PORT, () => {
+      console.log(`[SPORT X WEAR] Enterprise API & WebSocket running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
     });
 
     return server;

@@ -73,7 +73,7 @@ export const ProductFilter: React.FC<ProductFilterProps> = ({
       {/* ====================================================================
           1. MOBILE FLIPKART / AMAZON STYLE FILTER BAR (Visible on screens < 768px)
           ==================================================================== */}
-      <div className="block md:hidden bg-white border border-neutral-200 shadow-xs mb-4">
+      <div className="block md:hidden bg-white border border-neutral-200 shadow-xs mb-4 w-full overflow-hidden">
         {/* Horizontal Category Scroll Chips (Like Flipkart/Amazon Category Pills) */}
         <div className="flex items-center gap-2 overflow-x-auto px-3 py-2.5 scrollbar-none border-b border-neutral-100">
           {categories.map((cat) => {

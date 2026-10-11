@@ -44,15 +44,15 @@ export const Footer: React.FC = () => {
               <p className="font-headline text-sm font-bold uppercase tracking-wider text-neutral-800 mb-2">
                 SUBSCRIBE FOR EXCLUSIVE OFFERS & DROPS
               </p>
-              <form onSubmit={(e) => e.preventDefault()} className="flex max-w-md">
+              <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row w-full max-w-md gap-2 sm:gap-0">
                 <input
                   type="email"
                   placeholder="Enter your email address..."
-                  className="bg-white border border-neutral-300 px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-red-600 flex-1 shadow-xs"
+                  className="bg-white border border-neutral-300 px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-red-600 flex-1 min-w-0 w-full shadow-xs"
                 />
                 <button
                   type="submit"
-                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 font-headline text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer"
+                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 font-headline text-sm font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 cursor-pointer shrink-0"
                 >
                   SUBSCRIBE <ArrowRight className="w-4 h-4" />
                 </button>
@@ -117,9 +117,9 @@ export const Footer: React.FC = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-neutral-200 text-xs text-neutral-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-neutral-200 text-xs text-neutral-500 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
         <p>© 2026 SPORT X WEAR INC. ALL RIGHTS RESERVED. BUILT FOR CHAMPIONS.</p>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
           <span className="hover:text-neutral-900 cursor-pointer">Privacy Policy</span>
           <span className="hover:text-neutral-900 cursor-pointer">Terms of Service</span>
           <span className="hover:text-neutral-900 cursor-pointer">Cookie Settings</span>

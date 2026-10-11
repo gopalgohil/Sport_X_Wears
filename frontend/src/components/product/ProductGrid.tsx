@@ -53,7 +53,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
   return (
     <>
       {/* Responsive Grid: 2 col on mobile, 4 col on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full">
         {products.map((product) => (
           <ProductCard
             key={product._id}

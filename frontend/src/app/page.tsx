@@ -125,7 +125,7 @@ export default function HomePage() {
       {/* Navigation Bar with Search Integration */}
       <Navbar onSearchSubmit={handleSearch} />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full overflow-x-hidden">
         {/* =========================================
             1. HERO SECTION (Clean White Athletic Canvas)
            ========================================= */}
@@ -209,8 +209,8 @@ export default function HomePage() {
         {/* =========================================
             3. PRODUCT GRID & FILTER LAYOUT
            ========================================= */}
-        <section id="products-section" className="py-8 sm:py-12 bg-neutral-50/50 border-t border-neutral-200 scroll-mt-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="products-section" className="py-6 sm:py-12 bg-neutral-50/50 border-t border-neutral-200 scroll-mt-24 w-full overflow-hidden">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 w-full">
             {/* Active Search Filter Banner */}
             {searchQuery && (
               <div className="mb-6 p-4 bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200">

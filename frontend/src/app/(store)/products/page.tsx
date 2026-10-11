@@ -107,8 +107,8 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col">
       <Navbar onSearchSubmit={handleSearch} />
 
-      <main className="flex-1 py-8 sm:py-12 bg-neutral-50/50 border-t border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 py-6 sm:py-12 bg-neutral-50/50 border-t border-neutral-200 w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 w-full">
           {/* Active Search Banner */}
           {searchQuery && (
             <div className="mb-6 p-4 bg-white border border-neutral-200 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200">

@@ -40,7 +40,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <div className="group flex flex-col bg-white border border-neutral-200 transition-all duration-300 hover:shadow-lg relative justify-between">
+    <div className="group flex flex-col w-full bg-white border border-neutral-200 transition-all duration-300 hover:shadow-lg relative justify-between overflow-hidden">
       {/* Product Image Section */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
         <Link href={productUrl} className="block w-full h-full">

@@ -9,6 +9,13 @@ import Footer from '../../../components/common/Footer';
 import ProductGrid from '../../../components/product/ProductGrid';
 import ProductFilter from '../../../components/product/ProductFilter';
 import { getProducts, getCategories } from '../../../lib/api';
+import {
+  getCachedProducts,
+  getCachedCategories,
+  saveCachedProducts,
+  saveCachedCategories,
+  FALLBACK_PRODUCTS,
+} from '../../../lib/initialData';
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -16,9 +23,27 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
   const [selectedSize, setSelectedSize] = useState('ALL');
   const [sortBy, setSortBy] = useState('featured');
-  const [categoriesList, setCategoriesList] = useState<string[]>(['ALL GEAR']);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [categoriesList, setCategoriesList] = useState<string[]>([
+    'ALL GEAR',
+    'Sports T-Shirts',
+    'Track Pants',
+    'Sports Caps',
+  ]);
+  // Instant render on frame 0 (no 15-20s waiting)
+  const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Sync cached data on client mount immediately
+  useEffect(() => {
+    const cached = getCachedProducts();
+    if (cached && cached.length > 0) {
+      setProducts(cached);
+    }
+    const cachedCats = getCachedCategories();
+    if (cachedCats && cachedCats.length > 0) {
+      setCategoriesList(['ALL GEAR', ...cachedCats.map((c) => c.name)]);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,6 +61,7 @@ export default function ProductsPage() {
         const res = await getCategories();
         if (res.success && res.data && res.data.length > 0) {
           setCategoriesList(['ALL GEAR', ...res.data.map((c) => c.name)]);
+          saveCachedCategories(res.data);
         }
       } catch (err) {
         console.error('Failed to load categories:', err);
@@ -46,7 +72,6 @@ export default function ProductsPage() {
 
   useEffect(() => {
     async function loadProducts() {
-      setIsLoading(true);
       try {
         const res = await getProducts({
           category: selectedCategory !== 'ALL GEAR' ? selectedCategory : undefined,
@@ -55,16 +80,12 @@ export default function ProductsPage() {
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data)) {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setProducts(res.data);
-        } else {
-          setProducts([]);
+          saveCachedProducts(res.data);
         }
       } catch (err) {
         console.error('Failed to load products:', err);
-        setProducts([]);
-      } finally {
-        setIsLoading(false);
       }
     }
 

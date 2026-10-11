@@ -10,6 +10,13 @@ import Footer from '../components/common/Footer';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilter from '../components/product/ProductFilter';
 import { getProducts, getCategories } from '../lib/api';
+import {
+  getCachedProducts,
+  getCachedCategories,
+  saveCachedProducts,
+  saveCachedCategories,
+  FALLBACK_PRODUCTS,
+} from '../lib/initialData';
 
 export default function HomePage() {
   const router = useRouter();
@@ -17,9 +24,27 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
   const [selectedSize, setSelectedSize] = useState('ALL');
   const [sortBy, setSortBy] = useState('featured');
-  const [categoriesList, setCategoriesList] = useState<string[]>(['ALL GEAR']);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [categoriesList, setCategoriesList] = useState<string[]>([
+    'ALL GEAR',
+    'Sports T-Shirts',
+    'Track Pants',
+    'Sports Caps',
+  ]);
+  // Instant render on frame 0 (no 15-20s waiting)
+  const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Sync cached data on client mount immediately
+  useEffect(() => {
+    const cached = getCachedProducts();
+    if (cached && cached.length > 0) {
+      setProducts(cached);
+    }
+    const cachedCats = getCachedCategories();
+    if (cachedCats && cachedCats.length > 0) {
+      setCategoriesList(['ALL GEAR', ...cachedCats.map((c) => c.name)]);
+    }
+  }, []);
 
   // Sync search query from URL params if present on client
   useEffect(() => {
@@ -36,13 +61,14 @@ export default function HomePage() {
     }
   }, []);
 
-  // Fetch dynamic categories from backend MongoDB Atlas
+  // Fetch dynamic categories in background
   useEffect(() => {
     async function loadCategories() {
       try {
         const res = await getCategories();
         if (res.success && res.data && res.data.length > 0) {
           setCategoriesList(['ALL GEAR', ...res.data.map((c) => c.name)]);
+          saveCachedCategories(res.data);
         }
       } catch (err) {
         console.error('Failed to load dynamic categories:', err);
@@ -51,10 +77,9 @@ export default function HomePage() {
     loadCategories();
   }, []);
 
-  // Fetch dynamic products from backend API when filters, sort, or search change
+  // Fetch dynamic products in background without blocking initial view
   useEffect(() => {
     async function loadProducts() {
-      setIsLoading(true);
       try {
         const res = await getProducts({
           category: selectedCategory !== 'ALL GEAR' ? selectedCategory : undefined,
@@ -63,16 +88,12 @@ export default function HomePage() {
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data)) {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setProducts(res.data);
-        } else {
-          setProducts([]);
+          saveCachedProducts(res.data);
         }
       } catch (err) {
         console.error('Failed to load dynamic products:', err);
-        setProducts([]);
-      } finally {
-        setIsLoading(false);
       }
     }
 

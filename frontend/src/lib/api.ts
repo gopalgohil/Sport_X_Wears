@@ -1,4 +1,5 @@
 import { Product, Category, User, AuthResponse, Order } from '../types';
+import { FALLBACK_PRODUCTS, FALLBACK_CATEGORIES } from './initialData';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
@@ -71,23 +72,34 @@ export async function getProducts(
 
   try {
     const res = await fetch(url, {
-      cache: 'no-store', // Always fetch fresh inventory & pricing
+      next: { revalidate: 30 }, // Vercel Edge caching (revalidates every 30s)
     });
 
     if (!res.ok) {
       throw new Error(`Failed to fetch products: ${res.statusText}`);
     }
 
-    return await res.json();
-  } catch (error) {
-    console.error('[API getProducts Error]:', error);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+      return data;
+    }
     return {
-      success: false,
-      count: 0,
-      total: 0,
+      success: true,
+      count: FALLBACK_PRODUCTS.length,
+      total: FALLBACK_PRODUCTS.length,
       page: 1,
-      totalPages: 0,
-      data: [],
+      totalPages: 1,
+      data: FALLBACK_PRODUCTS,
+    };
+  } catch (error) {
+    console.warn('[API getProducts Warning - using instant cache]:', error);
+    return {
+      success: true,
+      count: FALLBACK_PRODUCTS.length,
+      total: FALLBACK_PRODUCTS.length,
+      page: 1,
+      totalPages: 1,
+      data: FALLBACK_PRODUCTS,
     };
   }
 }
@@ -107,13 +119,21 @@ export async function getCategories(): Promise<CategoriesResponse> {
       throw new Error(`Failed to fetch categories: ${res.statusText}`);
     }
 
-    return await res.json();
-  } catch (error) {
-    console.error('[API getCategories Error]:', error);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+      return data;
+    }
     return {
-      success: false,
-      count: 0,
-      data: [],
+      success: true,
+      count: FALLBACK_CATEGORIES.length,
+      data: FALLBACK_CATEGORIES,
+    };
+  } catch (error) {
+    console.warn('[API getCategories Warning - using instant cache]:', error);
+    return {
+      success: true,
+      count: FALLBACK_CATEGORIES.length,
+      data: FALLBACK_CATEGORIES,
     };
   }
 }

@@ -25,7 +25,7 @@ import {
   BadgeCheck,
   ChevronDown,
 } from 'lucide-react';
-import { getAllUsersAdmin, updateUserRoleAdmin, deleteUserAdmin, AdminUsersResponse } from '@/lib/api';
+import { getAllUsersAdmin, deleteUserAdmin, AdminUsersResponse } from '@/lib/api';
 import { User } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -49,8 +49,7 @@ export default function AdminUsersPage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // Modal states
-  const [roleModalUser, setRoleModalUser] = useState<User | null>(null);
+  // Delete modal state
   const [deleteModalUser, setDeleteModalUser] = useState<User | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -96,24 +95,6 @@ export default function AdminUsersPage() {
     navigator.clipboard.writeText(email);
     setCopiedEmail(email);
     setTimeout(() => setCopiedEmail(null), 2000);
-  };
-
-  const handleConfirmRoleChange = async () => {
-    if (!roleModalUser) return;
-    setActionLoading(true);
-    setActionError(null);
-    try {
-      const targetRole = roleModalUser.role === 'admin' ? 'user' : 'admin';
-      await updateUserRoleAdmin(roleModalUser._id, targetRole, token);
-      setActionSuccess(`Role for ${roleModalUser.name} successfully changed to ${targetRole.toUpperCase()}`);
-      setRoleModalUser(null);
-      await fetchUsers(true);
-    } catch (err: any) {
-      setActionError(err.message || 'Failed to update user role');
-    } finally {
-      setActionLoading(false);
-      setTimeout(() => setActionSuccess(null), 4000);
-    }
   };
 
   const handleConfirmDelete = async () => {
@@ -497,26 +478,12 @@ export default function AdminUsersPage() {
                       {/* Actions */}
                       <td className="py-4 px-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {/* Role Toggle Button */}
-                          <button
-                            onClick={() => setRoleModalUser(athlete)}
-                            disabled={isCurrentAdmin}
-                            title={athlete.role === 'admin' ? 'Demote to Athlete' : 'Promote to Admin'}
-                            className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-semibold transition ${
-                              athlete.role === 'admin'
-                                ? 'bg-neutral-900 border-neutral-700 text-neutral-300 hover:text-white hover:border-neutral-500'
-                                : 'bg-red-950/60 border-red-800 text-red-300 hover:bg-red-900'
-                            } disabled:opacity-40 disabled:cursor-not-allowed`}
-                          >
-                            {athlete.role === 'admin' ? 'Demote' : 'Make Admin'}
-                          </button>
-
                           {/* Delete Button */}
                           <button
                             onClick={() => setDeleteModalUser(athlete)}
                             disabled={isCurrentAdmin}
-                            title="Delete User"
-                            className="p-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-red-400 hover:border-red-800/60 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                            title={isCurrentAdmin ? "Cannot delete own admin account" : "Delete User Account"}
+                            className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-red-400 hover:border-red-800/60 transition disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -627,62 +594,18 @@ export default function AdminUsersPage() {
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setRoleModalUser(athlete)}
-                        disabled={isCurrentAdmin}
-                        className="px-2.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-semibold disabled:opacity-30"
-                      >
-                        {athlete.role === 'admin' ? 'Demote' : 'Make Admin'}
-                      </button>
-
-                      <button
                         onClick={() => setDeleteModalUser(athlete)}
                         disabled={isCurrentAdmin}
-                        className="p-1 rounded-lg bg-neutral-800 border border-neutral-700 text-red-400 disabled:opacity-30"
+                        title={isCurrentAdmin ? "Cannot delete own admin account" : "Delete User Account"}
+                        className="p-1.5 rounded-lg bg-neutral-800 border border-neutral-700 text-red-400 hover:bg-neutral-700 transition disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Role Change Confirmation Modal */}
-      {roleModalUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-amber-400">
-              <ShieldCheck className="w-6 h-6" />
-              <h3 className="text-lg font-bold text-white">Confirm Role Update</h3>
-            </div>
-            <p className="text-xs text-neutral-300 leading-relaxed">
-              Are you sure you want to change the privileges for{' '}
-              <strong className="text-white font-bold">{roleModalUser.name}</strong> ({roleModalUser.email}) from{' '}
-              <span className="uppercase text-amber-400 font-bold">{roleModalUser.role}</span> to{' '}
-              <span className="uppercase text-red-400 font-bold">
-                {roleModalUser.role === 'admin' ? 'user' : 'admin'}
-              </span>
-              ?
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setRoleModalUser(null)}
-                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-neutral-300 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmRoleChange}
-                disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition flex items-center gap-2"
-              >
-                {actionLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                <span>Confirm Role Change</span>
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -43,6 +43,7 @@ function RegisterForm() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -113,6 +114,11 @@ function RegisterForm() {
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match. Please verify.');
+      return;
+    }
+
+    if (!agreeTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy to continue.');
       return;
     }
 
@@ -454,11 +460,42 @@ function RegisterForm() {
               </div>
             </div>
 
+            {/* Terms of Service & Privacy Policy Agreement Checkbox */}
+            <div className="pt-0.5">
+              <label className="flex items-center gap-2 cursor-pointer group select-none">
+                <input
+                  type="checkbox"
+                  required
+                  checked={agreeTerms}
+                  onChange={(e) => {
+                    setAgreeTerms(e.target.checked);
+                    if (error) setError('');
+                  }}
+                  className="w-4 h-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500/20 accent-emerald-600 cursor-pointer shrink-0 transition"
+                />
+                <span className="text-[11px] sm:text-xs text-neutral-600 leading-tight">
+                  I agree to the{' '}
+                  <span className="text-emerald-600 hover:text-emerald-700 font-semibold underline underline-offset-2">
+                    Terms of Service
+                  </span>{' '}
+                  and{' '}
+                  <span className="text-emerald-600 hover:text-emerald-700 font-semibold underline underline-offset-2">
+                    Privacy Policy
+                  </span>
+                  .
+                </span>
+              </label>
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full h-11 sm:h-12 bg-neutral-950 hover:bg-red-600 active:scale-[0.99] text-white font-headline text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_8px_20px_rgba(0,0,0,0.12)] hover:shadow-red-600/25 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed group mt-1"
+              disabled={isLoading || !agreeTerms}
+              className={`w-full h-11 sm:h-12 bg-neutral-950 text-white font-headline text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_8px_20px_rgba(0,0,0,0.12)] group mt-1 ${
+                !agreeTerms || isLoading
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-red-600 hover:shadow-red-600/25 active:scale-[0.99] cursor-pointer'
+              }`}
             >
               {isLoading ? (
                 <>

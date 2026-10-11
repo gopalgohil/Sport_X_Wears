@@ -40,7 +40,7 @@ import Footer from '../../../components/common/Footer';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, token, isAuthenticated, isLoading, logout, updateProfile } = useAuth();
+  const { user, token, isAuthenticated, isLoading, requestLogout, updateProfile } = useAuth();
   const { addToCart } = useCart();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'security'>('orders');
@@ -195,8 +195,7 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    logout();
-    router.push('/');
+    requestLogout();
   };
 
   if (isLoading) {

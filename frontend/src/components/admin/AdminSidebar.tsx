@@ -27,7 +27,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, requestLogout } = useAuth();
   const { unreadCount } = useSocket();
 
   const navigation = [
@@ -215,9 +215,10 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
             </div>
 
             <button
-              onClick={() => logout()}
-              title="Logout"
-              className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors"
+              onClick={() => requestLogout()}
+              title="Sign Out"
+              aria-label="Sign Out"
+              className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>

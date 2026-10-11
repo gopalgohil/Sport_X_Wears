@@ -15,6 +15,7 @@ import {
   Clock,
   ArrowRight,
   CheckCircle2,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
@@ -25,7 +26,7 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, requestLogout } = useAuth();
   const {
     unreadCount,
     notifications,
@@ -229,6 +230,16 @@ export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
             <span className="text-[10px] text-emerald-400 font-medium">Online</span>
           </div>
         </div>
+
+        {/* Quick Sign Out Button */}
+        <button
+          onClick={() => requestLogout()}
+          title="Sign Out"
+          aria-label="Sign Out"
+          className="p-2.5 rounded-xl bg-neutral-900 hover:bg-red-950/40 border border-neutral-800 text-neutral-400 hover:text-red-400 transition cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );

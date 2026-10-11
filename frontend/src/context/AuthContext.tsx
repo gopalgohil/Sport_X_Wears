@@ -10,6 +10,7 @@ import {
   getAuthMe,
   updateUserProfile,
 } from '../lib/api';
+import SignOutModal from '../components/common/SignOutModal';
 
 interface AuthContextType {
   user: User | null;
@@ -31,6 +32,10 @@ interface AuthContextType {
     addresses?: any[];
   }) => Promise<void>;
   logout: () => void;
+  isLogoutModalOpen: boolean;
+  requestLogout: () => void;
+  cancelLogout: () => void;
+  confirmLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState<boolean>(false);
 
   // Initialize from localStorage and verify with backend
   useEffect(() => {
@@ -172,6 +178,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const requestLogout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const cancelLogout = () => {
+    setIsLogoutModalOpen(false);
+  };
+
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false);
+    logout();
+    if (typeof window !== 'undefined') {
+      if (
+        window.location.pathname.startsWith('/admin') ||
+        window.location.pathname.startsWith('/profile')
+      ) {
+        window.location.href = '/login';
+      }
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -185,9 +212,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         resendOtp,
         updateProfile,
         logout,
+        isLogoutModalOpen,
+        requestLogout,
+        cancelLogout,
+        confirmLogout,
       }}
     >
       {children}
+      <SignOutModal />
     </AuthContext.Provider>
   );
 };

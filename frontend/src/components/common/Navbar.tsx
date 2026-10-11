@@ -24,7 +24,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick }) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, requestLogout } = useAuth();
   const { unreadCount, notifications, markAsRead, markAllAsRead, requestNotificationPermission } = useSocket();
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -132,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
                         type="button"
                         onClick={() => {
                           setUserDropdownOpen(false);
-                          logout();
+                          requestLogout();
                         }}
                         className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
                       >

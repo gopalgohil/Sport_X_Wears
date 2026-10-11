@@ -189,8 +189,13 @@ function ForgotPasswordForm() {
   };
 
   return (
-    <div className="w-full max-w-sm sm:max-w-md mx-auto bg-white rounded-2xl sm:rounded-3xl border border-neutral-200/90 shadow-[0_20px_50px_-10px_rgba(220,38,38,0.1),0_10px_30px_-5px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 relative z-10 backdrop-blur-sm">
-      <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-neutral-950 to-red-600" />
+    <div className="relative w-full max-w-sm sm:max-w-md mx-auto">
+      {/* Desktop Light Highlight Glow / Aura around the Box Model */}
+      <div className="hidden md:block absolute -inset-2 bg-gradient-to-b from-red-600/15 via-neutral-300/40 to-neutral-400/20 rounded-[28px] blur-xl -z-10 pointer-events-none" />
+
+      {/* Main Box Model Card */}
+      <div className="w-full bg-white rounded-2xl sm:rounded-3xl border border-neutral-200/90 md:border-neutral-300 md:ring-1 md:ring-neutral-900/10 md:shadow-[0_24px_65px_-12px_rgba(0,0,0,0.16),0_10px_28px_-6px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)] shadow-[0_20px_50px_-10px_rgba(220,38,38,0.1),0_10px_30px_-5px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 relative z-10">
+        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-neutral-950 to-red-600" />
 
       <div className="p-4 sm:p-7 space-y-3 sm:space-y-4">
         {/* Header */}
@@ -462,12 +467,13 @@ function ForgotPasswordForm() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="fixed inset-0 h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-red-50/50 flex flex-col justify-between selection:bg-red-600 selection:text-white z-50">
+    <div className="fixed inset-0 h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-red-50/50 md:from-neutral-100 md:via-neutral-50/70 md:to-neutral-100 flex flex-col justify-between selection:bg-red-600 selection:text-white z-50">
       <div className="absolute -top-24 -right-24 w-72 sm:w-96 h-72 sm:h-96 bg-gradient-to-br from-red-500/12 via-orange-400/8 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-72 sm:w-96 h-72 sm:h-96 bg-gradient-to-tr from-red-600/10 via-rose-300/12 to-transparent rounded-full blur-3xl pointer-events-none" />
 

@@ -608,10 +608,10 @@ export default function RegisterPage() {
 
       {/* Top Header */}
       <header className="w-full bg-white/90 backdrop-blur-md border-b border-neutral-200/90 shadow-2xs shrink-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center group">
-            <span className="font-headline text-lg sm:text-xl font-black tracking-tighter uppercase italic text-neutral-950 flex items-center">
-              SPORT <span className="text-red-600 px-0.5 sm:px-1 transform -skew-x-12 inline-block">X</span> WEAR
+            <span className="font-headline text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase italic text-neutral-950 flex items-center transition-transform group-hover:scale-[1.02]">
+              SPORT <span className="text-red-600 px-1 sm:px-1.5 transform -skew-x-12 inline-block">X</span> WEAR
             </span>
           </Link>
 

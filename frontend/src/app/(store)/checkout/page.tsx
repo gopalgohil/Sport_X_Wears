@@ -532,8 +532,8 @@ export default function CheckoutPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <span className="font-headline text-xl sm:text-2xl font-black tracking-tighter uppercase italic text-neutral-950 flex items-center">
-              SPORT <span className="text-red-600 px-0.5 transform -skew-x-12 inline-block">X</span> WEAR
+            <span className="font-headline text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase italic text-neutral-950 flex items-center">
+              SPORT <span className="text-red-600 px-1 sm:px-1.5 transform -skew-x-12 inline-block">X</span> WEAR
             </span>
           </div>
 

@@ -111,6 +111,32 @@ export const createOrder = asyncHandler(async (req, res) => {
     });
 
     broadcastNewOrder(notification);
+
+    // Also dispatch live order confirmation notification for Customer
+    try {
+      const customerNotif = await Notification.create({
+        recipient: order.user || null,
+        recipientRole: 'customer',
+        title: `Order #${order._id.toString().slice(-6)} Confirmed! 🎉`,
+        message: `Your order for ₹${order.totalAmount.toLocaleString('en-IN')} has been placed successfully and is being prepared.`,
+        type: 'order_status',
+        order: order._id,
+        meta: {
+          customerName: customer.name.trim(),
+          customerEmail: customer.email.trim().toLowerCase(),
+          totalAmount: order.totalAmount,
+          orderStatus: order.orderStatus,
+        },
+      });
+
+      sendOrderStatusUpdate(
+        order.user ? order.user.toString() : null,
+        customerNotif,
+        customer.email.trim().toLowerCase()
+      );
+    } catch (cNotifErr) {
+      console.error('[Customer Notification Error]:', cNotifErr.message);
+    }
   } catch (notifErr) {
     console.error('[Notification Dispatch Error]:', notifErr.message);
   }
@@ -268,7 +294,11 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
       },
     });
 
-    sendOrderStatusUpdate(order.user ? order.user.toString() : null, notification);
+    sendOrderStatusUpdate(
+      order.user ? order.user.toString() : null,
+      notification,
+      order.customer?.email
+    );
   } catch (notifErr) {
     console.error('[Status Notification Error]:', notifErr.message);
   }

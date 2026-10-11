@@ -58,12 +58,17 @@ export const broadcastNewOrder = (notification) => {
 /**
  * Notify specific customer and admins of order lifecycle status changes (accepted, shipped, etc.)
  */
-export const sendOrderStatusUpdate = (userId, notification) => {
+export const sendOrderStatusUpdate = (userId, notification, email = null) => {
   if (!ioInstance) return;
 
-  // Broadcast to customer's personal channel if registered
+  // Broadcast to customer's personal channel by user ID
   if (userId) {
     ioInstance.to(`user:${userId}`).emit('order_status_notification', notification);
+  }
+
+  // Also broadcast by customer email channel for guest or resilient routing
+  if (email) {
+    ioInstance.to(`user:${email.toLowerCase()}`).emit('order_status_notification', notification);
   }
 
   // Also broadcast to admin room so admin UI reflects live status sync

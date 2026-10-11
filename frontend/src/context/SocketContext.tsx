@@ -102,8 +102,27 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [token]);
 
+  // Auto sync: ensures notifications update live on mobile without manual page refresh
   useEffect(() => {
     fetchNotificationsList();
+
+    // 1. Silent sync interval (every 15 seconds)
+    const interval = setInterval(() => {
+      fetchNotificationsList();
+    }, 15000);
+
+    // 2. Immediate sync when user unlocks mobile or switches back to browser tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNotificationsList();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchNotificationsList]);
 
   // Request browser desktop / mobile push notification permissions
@@ -163,8 +182,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const socketUrl = getSocketUrl();
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
+      reconnectionAttempts: 20,
+      reconnectionDelay: 1500,
     });
 
     newSocket.on('connect', () => {
@@ -177,6 +196,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (user?._id) {
         newSocket.emit('join_user_room', user._id);
       }
+      if (user?.email) {
+        newSocket.emit('join_user_room', user.email.toLowerCase());
+      }
+    });
+
+    newSocket.on('reconnect', () => {
+      setConnected(true);
+      if (user?.role === 'admin') newSocket.emit('join_admin_room');
+      if (user?._id) newSocket.emit('join_user_room', user._id);
+      if (user?.email) newSocket.emit('join_user_room', user.email.toLowerCase());
     });
 
     newSocket.on('disconnect', () => {
@@ -198,7 +227,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       newSocket.disconnect();
     };
-  }, [user?._id, user?.role, handleIncomingNotification]);
+  }, [handleIncomingNotification]);
+
+  // Ensure rooms are joined whenever authenticated user details load or change
+  useEffect(() => {
+    if (!socket || !connected) return;
+
+    if (user?.role === 'admin') {
+      socket.emit('join_admin_room');
+    }
+    if (user?._id) {
+      socket.emit('join_user_room', user._id);
+    }
+    if (user?.email) {
+      socket.emit('join_user_room', user.email.toLowerCase());
+    }
+  }, [socket, connected, user?._id, user?.role, user?.email]);
 
   // Dismiss floating banner
   const dismissLatestAlert = () => {

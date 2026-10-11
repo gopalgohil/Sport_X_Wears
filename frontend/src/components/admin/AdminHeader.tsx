@@ -16,6 +16,7 @@ export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
 
   const getPageTitle = () => {
     if (pathname === '/admin') return 'Dashboard Overview';
+    if (pathname.startsWith('/admin/users')) return 'Athletes & Users Directory';
     if (pathname === '/admin/products') return 'Products Inventory';
     if (pathname === '/admin/products/add') return 'Add New Product';
     if (pathname.includes('/edit')) return 'Edit Product';

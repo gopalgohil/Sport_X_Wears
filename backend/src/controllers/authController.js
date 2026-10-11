@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Order from '../models/Order.js';
 import { sendBrevoEmail, getOtpEmailTemplate, getPasswordResetOtpTemplate } from '../utils/sendEmail.js';
 
 /**
@@ -166,6 +167,7 @@ export const verifyOtp = async (req, res) => {
 
     // Activate athlete account & wipe OTP fields
     user.isVerified = true;
+    user.lastLogin = new Date();
     user.verificationOtp = undefined;
     user.verificationOtpExpire = undefined;
     await user.save();
@@ -306,6 +308,9 @@ export const login = async (req, res) => {
       });
     }
 
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+
     const token = generateToken(user._id);
 
     return res.status(200).json({
@@ -318,6 +323,7 @@ export const login = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        lastLogin: user.lastLogin,
         createdAt: user.createdAt,
       },
     });
@@ -529,4 +535,183 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
+
+/**
+ * @route   GET /api/v1/auth/users
+ * @desc    Get all users with order stats and KPIs (Admin only)
+ * @access  Private/Admin
+ */
+export const getAllUsersAdmin = async (req, res) => {
+  try {
+    const { search, role, isVerified } = req.query;
+
+    const query = {};
+    if (search) {
+      const reg = new RegExp(search.trim(), 'i');
+      query.$or = [{ name: reg }, { email: reg }, { phone: reg }];
+    }
+    if (role && role !== 'all') {
+      query.role = role;
+    }
+    if (isVerified && isVerified !== 'all') {
+      query.isVerified = isVerified === 'true';
+    }
+
+    const users = await User.find(query)
+      .select('-password -verificationOtp -verificationOtpExpire -resetPasswordOtp -resetPasswordOtpExpire')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Aggregate user orders metrics
+    const orderStats = await Order.aggregate([
+      { $match: { user: { $ne: null } } },
+      {
+        $group: {
+          _id: '$user',
+          ordersCount: { $sum: 1 },
+          totalSpent: { $sum: '$totalAmount' },
+          lastOrderDate: { $max: '$createdAt' },
+        },
+      },
+    ]);
+
+    const orderStatsMap = new Map();
+    orderStats.forEach((stat) => {
+      if (stat._id) {
+        orderStatsMap.set(stat._id.toString(), stat);
+      }
+    });
+
+    const enrichedUsers = users.map((u) => {
+      const stats = orderStatsMap.get(u._id.toString());
+      return {
+        ...u,
+        ordersCount: stats ? stats.ordersCount : 0,
+        totalSpent: stats ? stats.totalSpent : 0,
+        lastOrderDate: stats ? stats.lastOrderDate : null,
+      };
+    });
+
+    // KPI metrics
+    const totalUsers = await User.countDocuments();
+    const verifiedUsers = await User.countDocuments({ isVerified: true });
+    const adminUsers = await User.countDocuments({ role: 'admin' });
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const activeToday = await User.countDocuments({ lastLogin: { $gte: twentyFourHoursAgo } });
+
+    // Total spent across all users
+    const allOrdersTotal = orderStats.reduce((acc, curr) => acc + (curr.totalSpent || 0), 0);
+
+    return res.status(200).json({
+      success: true,
+      count: enrichedUsers.length,
+      kpis: {
+        totalUsers,
+        verifiedUsers,
+        adminUsers,
+        activeToday,
+        allOrdersTotal,
+      },
+      users: enrichedUsers,
+    });
+  } catch (error) {
+    console.error('[Get All Users Admin Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while fetching users.',
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/v1/auth/users/:id/role
+ * @desc    Change user role (user/admin)
+ * @access  Private/Admin
+ */
+export const updateUserRoleAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Must be either "user" or "admin".',
+      });
+    }
+
+    if (id === req.user._id.toString() && role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot remove your own admin privileges.',
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    user.role = role;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `User role updated to ${role} successfully.`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('[Update User Role Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while updating user role.',
+    });
+  }
+};
+
+/**
+ * @route   DELETE /api/v1/auth/users/:id
+ * @desc    Delete a user account
+ * @access  Private/Admin
+ */
+export const deleteUserAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (id === req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own admin account.',
+      });
+    }
+
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${user.name} (${user.email}) deleted successfully.`,
+    });
+  } catch (error) {
+    console.error('[Delete User Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while deleting user.',
+    });
+  }
+};
+
 

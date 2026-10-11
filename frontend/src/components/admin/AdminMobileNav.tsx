@@ -6,20 +6,34 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Package,
-  PlusCircle,
   ShoppingBag,
   FolderTree,
+  Users,
 } from 'lucide-react';
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: any;
+  exact: boolean;
+  isSpecial?: boolean;
+}
 
 export default function AdminMobileNav() {
   const pathname = usePathname();
 
-  const navigation = [
+  const navigation: NavItem[] = [
     {
       name: 'Overview',
       href: '/admin',
       icon: LayoutDashboard,
       exact: true,
+    },
+    {
+      name: 'Athletes',
+      href: '/admin/users',
+      icon: Users,
+      exact: false,
     },
     {
       name: 'Products',
@@ -28,20 +42,13 @@ export default function AdminMobileNav() {
       exact: false,
     },
     {
-      name: 'Add Gear',
-      href: '/admin/products/add',
-      icon: PlusCircle,
-      exact: true,
-      isSpecial: true,
-    },
-    {
       name: 'Orders',
       href: '/admin/orders',
       icon: ShoppingBag,
       exact: false,
     },
     {
-      name: 'Categories',
+      name: 'Catalog',
       href: '/admin/categories',
       icon: FolderTree,
       exact: false,

@@ -633,5 +633,110 @@ export async function createCategoryAdmin(
   return data;
 }
 
+export interface AdminUsersResponse {
+  success: boolean;
+  count: number;
+  kpis: {
+    totalUsers: number;
+    verifiedUsers: number;
+    adminUsers: number;
+    activeToday: number;
+    allOrdersTotal: number;
+  };
+  users: User[];
+}
+
+/**
+ * Fetch all registered users with metrics (Admin Only)
+ */
+export async function getAllUsersAdmin(
+  params: { search?: string; role?: string; isVerified?: string } = {},
+  token?: string | null
+): Promise<AdminUsersResponse> {
+  const query = new URLSearchParams();
+  if (params.search) query.set('search', params.search);
+  if (params.role) query.set('role', params.role);
+  if (params.isVerified) query.set('isVerified', params.isVerified);
+
+  const url = `${API_BASE_URL}/auth/users${query.toString() ? `?${query.toString()}` : ''}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch registered athletes');
+  }
+
+  return data;
+}
+
+/**
+ * Update user role (Admin Only)
+ */
+export async function updateUserRoleAdmin(
+  userId: string,
+  role: 'user' | 'admin',
+  token?: string | null
+): Promise<{ success: boolean; message: string; user: Partial<User> }> {
+  const url = `${API_BASE_URL}/auth/users/${userId}/role`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ role }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to update user role');
+  }
+
+  return data;
+}
+
+/**
+ * Delete user account (Admin Only)
+ */
+export async function deleteUserAdmin(
+  userId: string,
+  token?: string | null
+): Promise<{ success: boolean; message: string }> {
+  const url = `${API_BASE_URL}/auth/users/${userId}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to delete user');
+  }
+
+  return data;
+}
+
+
 
 

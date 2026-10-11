@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   ChevronRight,
   X,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -32,6 +33,12 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
       href: '/admin',
       icon: LayoutDashboard,
       exact: true,
+    },
+    {
+      name: 'Athletes & Users',
+      href: '/admin/users',
+      icon: Users,
+      exact: false,
     },
     {
       name: 'Products',

@@ -8,8 +8,11 @@ import {
   updateProfile,
   forgotPassword,
   resetPassword,
+  getAllUsersAdmin,
+  updateUserRoleAdmin,
+  deleteUserAdmin,
 } from '../controllers/authController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -21,6 +24,11 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/me', protect, getMe);
 router.put('/update-profile', protect, updateProfile);
+
+// Admin User Management Routes
+router.get('/users', protect, authorize('admin'), getAllUsersAdmin);
+router.put('/users/:id/role', protect, authorize('admin'), updateUserRoleAdmin);
+router.delete('/users/:id', protect, authorize('admin'), deleteUserAdmin);
 
 export default router;
 

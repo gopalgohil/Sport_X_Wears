@@ -14,8 +14,9 @@ import {
   CheckCircle2,
   FolderTree,
   ExternalLink,
+  Users,
 } from 'lucide-react';
-import { getProducts, getCategories, getAllOrdersAdmin } from '@/lib/api';
+import { getProducts, getCategories, getAllOrdersAdmin, getAllUsersAdmin } from '@/lib/api';
 import { Product, Category, Order } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -25,21 +26,25 @@ export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
       setLoading(true);
       try {
-        const [prodRes, catRes, orderRes] = await Promise.all([
+        const [prodRes, catRes, orderRes, usersRes] = await Promise.all([
           getProducts({ limit: 50 }),
           getCategories(),
           getAllOrdersAdmin({ limit: 10 }, token).catch(() => ({ data: [], total: 0 })),
+          getAllUsersAdmin({}, token).catch(() => ({ count: 0, kpis: { totalUsers: 0 } })),
         ]);
 
         if (prodRes?.data) setProducts(prodRes.data);
         if (catRes?.data) setCategories(catRes.data);
         if (orderRes?.data) setOrders(orderRes.data);
+        if (usersRes?.kpis?.totalUsers !== undefined) setTotalUsers(usersRes.kpis.totalUsers);
+        else if (usersRes?.count) setTotalUsers(usersRes.count);
       } catch (err) {
         console.error('Error fetching admin dashboard data:', err);
       } finally {
@@ -83,6 +88,14 @@ export default function AdminDashboardPage() {
             >
               <Plus className="w-4 h-4" />
               <span>Add New Product</span>
+            </Link>
+
+            <Link
+              href="/admin/users"
+              className="px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-sm border border-neutral-700 transition-colors flex items-center gap-2"
+            >
+              <Users className="w-4 h-4 text-red-500" />
+              <span>Athletes {totalUsers > 0 ? `(${totalUsers})` : ''}</span>
             </Link>
 
             <Link

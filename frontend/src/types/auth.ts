@@ -15,6 +15,11 @@ export interface User {
   email: string;
   phone?: string;
   role: 'user' | 'admin';
+  isVerified?: boolean;
+  lastLogin?: string;
+  ordersCount?: number;
+  totalSpent?: number;
+  lastOrderDate?: string | null;
   addresses?: Address[];
   createdAt?: string;
 }

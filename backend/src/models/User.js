@@ -107,6 +107,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    lastLogin: {
+      type: Date,
+      default: Date.now,
+    },
     addresses: [addressSchema],
   },
   {

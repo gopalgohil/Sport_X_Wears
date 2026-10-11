@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Menu,
-  ExternalLink,
   ShieldAlert,
   Sparkles,
   User as UserIcon,
@@ -96,7 +95,30 @@ export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
 
       {/* Right: Quick Actions & Notification Bell */}
       <div className="flex items-center gap-3">
-        {/* Real-time Notification Bell */}
+        {/* Admin Tag */}
+        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs">
+          <div className="w-6 h-6 rounded-lg bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
+            <UserIcon className="w-3.5 h-3.5" />
+          </div>
+          <div className="hidden md:block text-left">
+            <p className="font-semibold text-neutral-200 leading-tight">
+              {user?.name || 'Administrator'}
+            </p>
+            <span className="text-[10px] text-emerald-400 font-medium">Online</span>
+          </div>
+        </div>
+
+        {/* Quick Sign Out Button */}
+        <button
+          onClick={() => requestLogout()}
+          title="Sign Out"
+          aria-label="Sign Out"
+          className="p-2.5 rounded-xl bg-neutral-900 hover:bg-red-950/40 border border-neutral-800 text-neutral-400 hover:text-red-400 transition cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
+
+        {/* Real-time Notification Bell (in the corner) */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={handleToggleBell}
@@ -207,39 +229,6 @@ export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
             </div>
           )}
         </div>
-
-        {/* Live Storefront Link */}
-        <Link
-          href="/"
-          target="_blank"
-          className="hidden sm:flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl transition-all"
-        >
-          <ExternalLink className="w-3.5 h-3.5 text-red-500" />
-          <span>Live Store</span>
-        </Link>
-
-        {/* Admin Tag */}
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs">
-          <div className="w-6 h-6 rounded-lg bg-red-600/20 text-red-500 flex items-center justify-center font-bold">
-            <UserIcon className="w-3.5 h-3.5" />
-          </div>
-          <div className="hidden md:block text-left">
-            <p className="font-semibold text-neutral-200 leading-tight">
-              {user?.name || 'Administrator'}
-            </p>
-            <span className="text-[10px] text-emerald-400 font-medium">Online</span>
-          </div>
-        </div>
-
-        {/* Quick Sign Out Button */}
-        <button
-          onClick={() => requestLogout()}
-          title="Sign Out"
-          aria-label="Sign Out"
-          className="p-2.5 rounded-xl bg-neutral-900 hover:bg-red-950/40 border border-neutral-800 text-neutral-400 hover:text-red-400 transition cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
       </div>
     </header>
   );

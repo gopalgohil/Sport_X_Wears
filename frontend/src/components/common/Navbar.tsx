@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Heart,
+  ShoppingBag,
   User as UserIcon,
   LogOut,
   Package,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { useCart } from '../../context/CartContext';
 
 import SearchBar from './SearchBar';
 import CartDrawer from '../cart/CartDrawer';
@@ -25,6 +26,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick }) => {
   const { user, isAuthenticated, requestLogout } = useAuth();
+  const { totalItems, openCart } = useCart();
   const { unreadCount, notifications, markAsRead, markAllAsRead, requestNotificationPermission } = useSocket();
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -58,9 +60,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
     <>
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-neutral-200">
       {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-3">
-          {/* Athletic Brand Logo (Enlarged) */}
+      <div className="w-full px-3 sm:px-6 lg:px-8 xl:px-10">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-3 sm:gap-6">
+          {/* Athletic Brand Logo (Left Side on Desktop & Mobile) */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="flex items-center group">
               <span className="font-headline text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter uppercase italic text-neutral-950 flex items-center transition-transform group-hover:scale-[1.02]">
@@ -70,12 +72,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
           </div>
 
           {/* Desktop Search Bar (Amazon / Flipkart Style) */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-4">
+          <div className="hidden md:flex flex-1 max-w-xl mx-4 lg:mx-8">
             <SearchBar onSearchSubmit={onSearchSubmit} />
           </div>
 
-          {/* Utility Icons (Search, Auth/Profile, Wishlist, Notifications) */}
-          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
+          {/* Utility Icons (Auth/Profile, Notifications, Cart) */}
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             {/* Dynamic Authentication / Profile Menu (Desktop only, mobile uses Bottom Nav) */}
             {isAuthenticated && user ? (
               <div className="relative hidden md:block" ref={dropdownRef}>
@@ -153,13 +155,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
               </Link>
             )}
 
-            {/* Wishlist Icon */}
-            <button
-              className="hidden sm:inline-flex p-2 text-neutral-800 hover:text-red-600 transition-colors cursor-pointer relative"
-              aria-label="Wishlist"
-            >
-              <Heart className="w-5 h-5" />
-            </button>
 
             {/* Dynamic Notification Bell Trigger (In place of Cart Icon) */}
             <div className="relative" ref={notifRef}>
@@ -285,6 +280,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
                 </div>
               )}
             </div>
+
+            {/* Desktop Shopping Cart Trigger */}
+            <button
+              type="button"
+              onClick={openCart}
+              className="hidden md:inline-flex relative p-2 text-neutral-900 hover:text-red-600 transition-colors cursor-pointer group items-center"
+              aria-label="Shopping Cart"
+            >
+              <div className="relative inline-flex items-center justify-center">
+                <ShoppingBag className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2] transition-transform group-hover:scale-110 text-neutral-900 group-hover:text-red-600" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] sm:text-[11px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-in zoom-in duration-200">
+                    {totalItems > 99 ? '99+' : totalItems}
+                  </span>
+                )}
+              </div>
+            </button>
           </div>
         </div>
 

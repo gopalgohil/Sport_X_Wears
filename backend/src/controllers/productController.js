@@ -25,6 +25,25 @@ export const createProduct = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Title, category, price, and description are required fields');
   }
 
+  // Non-negative number validation
+  const numPrice = Number(price);
+  if (isNaN(numPrice) || numPrice <= 0) {
+    throw new ApiError(400, 'Product price must be greater than 0 and cannot be negative');
+  }
+
+  const numDiscount = discountPrice !== undefined && discountPrice !== '' ? Number(discountPrice) : 0;
+  if (isNaN(numDiscount) || numDiscount < 0) {
+    throw new ApiError(400, 'Discount price cannot be negative');
+  }
+  if (numDiscount > numPrice) {
+    throw new ApiError(400, 'Discount price cannot be higher than regular price');
+  }
+
+  const numStock = stock !== undefined && stock !== '' ? Number(stock) : 0;
+  if (isNaN(numStock) || numStock < 0) {
+    throw new ApiError(400, 'Stock quantity cannot be negative. Must be 0 or more');
+  }
+
   // Resolve category ID (supports either ObjectId or category slug)
   let categoryId = category;
   if (typeof category === 'string' && !/^[0-9a-fA-F]{24}$/.test(category)) {
@@ -58,8 +77,21 @@ export const createProduct = asyncHandler(async (req, res) => {
   let imageUrls = [];
   if (req.files && Array.isArray(req.files) && req.files.length > 0) {
     imageUrls = req.files.map((file) => file.path);
-  } else if (req.body.images) {
-    imageUrls = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+  }
+  const rawImages = req.body.images || req.body.imageUrls;
+  if (rawImages) {
+    let bodyImages = [];
+    if (typeof rawImages === 'string') {
+      try {
+        const parsed = JSON.parse(rawImages);
+        bodyImages = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        bodyImages = rawImages.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    } else if (Array.isArray(rawImages)) {
+      bodyImages = rawImages;
+    }
+    imageUrls = [...imageUrls, ...bodyImages];
   }
 
   if (imageUrls.length === 0) {
@@ -112,9 +144,10 @@ export const getProducts = asyncHandler(async (req, res) => {
     search,
     page = 1,
     limit = 12,
+    includeInactive,
   } = req.query;
 
-  const queryFilter = { isActive: true };
+  const queryFilter = includeInactive === 'true' ? {} : { isActive: true };
 
   // Category filtering (supports slug or ObjectId)
   if (category) {
@@ -288,6 +321,35 @@ export const updateProduct = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Product not found');
   }
 
+  // Validate non-negative numbers on update
+  if (updates.price !== undefined) {
+    const p = Number(updates.price);
+    if (isNaN(p) || p <= 0) {
+      throw new ApiError(400, 'Product price must be greater than 0 and cannot be negative');
+    }
+    updates.price = p;
+  }
+
+  if (updates.discountPrice !== undefined && updates.discountPrice !== '') {
+    const dp = Number(updates.discountPrice);
+    if (isNaN(dp) || dp < 0) {
+      throw new ApiError(400, 'Discount price cannot be negative');
+    }
+    const currentPrice = updates.price !== undefined ? updates.price : product.price;
+    if (dp > currentPrice) {
+      throw new ApiError(400, 'Discount price cannot be higher than regular price');
+    }
+    updates.discountPrice = dp;
+  }
+
+  if (updates.stock !== undefined && updates.stock !== '') {
+    const s = Number(updates.stock);
+    if (isNaN(s) || s < 0) {
+      throw new ApiError(400, 'Stock quantity cannot be negative. Must be 0 or more');
+    }
+    updates.stock = s;
+  }
+
   // Update slug if title was modified
   if (updates.title && updates.title !== product.title) {
     updates.slug = slugify(updates.title);
@@ -309,6 +371,15 @@ export const updateProduct = asyncHandler(async (req, res) => {
     updates.images = req.body.replaceImages === 'true'
       ? newImages
       : [...product.images, ...newImages].slice(0, 5);
+  } else if (updates.images) {
+    if (typeof updates.images === 'string') {
+      try {
+        const parsed = JSON.parse(updates.images);
+        updates.images = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        updates.images = updates.images.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    }
   }
 
   const updatedProduct = await Product.findByIdAndUpdate(id, updates, {

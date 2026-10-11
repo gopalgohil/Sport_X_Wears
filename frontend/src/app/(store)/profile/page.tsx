@@ -288,9 +288,11 @@ export default function ProfilePage() {
             {user.role === 'admin' && (
               <Link
                 href="/admin"
-                className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs font-bold uppercase rounded-lg transition-colors border border-neutral-300 shadow-2xs"
+                prefetch={false}
+                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase rounded-lg transition-colors border border-red-700 shadow-sm flex items-center gap-1.5"
               >
-                Admin Portal
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Admin Portal</span>
               </Link>
             )}
             <button

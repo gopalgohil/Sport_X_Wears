@@ -145,3 +145,81 @@ export const getMyOrders = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Get all orders with filtering and pagination (Admin)
+ * @route   GET /api/v1/orders
+ * @access  Private/Admin
+ */
+export const getAllOrders = asyncHandler(async (req, res) => {
+  const { status, page = 1, limit = 25, search } = req.query;
+
+  const filter = {};
+  if (status && status !== 'all') {
+    filter.orderStatus = status;
+  }
+
+  if (search && search.trim()) {
+    const s = search.trim();
+    filter.$or = [
+      { 'customer.name': { $regex: s, $options: 'i' } },
+      { 'customer.email': { $regex: s, $options: 'i' } },
+      { 'customer.phone': { $regex: s, $options: 'i' } },
+    ];
+  }
+
+  const pageNum = Math.max(1, parseInt(page, 10));
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10)));
+  const skip = (pageNum - 1) * limitNum;
+
+  const [total, orders] = await Promise.all([
+    Order.countDocuments(filter),
+    Order.find(filter)
+      .populate('items.product', 'title slug images price')
+      .populate('user', 'name email phone')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    total,
+    page: pageNum,
+    totalPages: Math.ceil(total / limitNum),
+    data: orders,
+  });
+});
+
+/**
+ * @desc    Update order status or payment status (Admin)
+ * @route   PUT /api/v1/orders/:id/status
+ * @access  Private/Admin
+ */
+export const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { orderStatus, paymentStatus } = req.body;
+
+  const updateFields = {};
+  if (orderStatus) updateFields.orderStatus = orderStatus;
+  if (paymentStatus) updateFields['paymentDetails.status'] = paymentStatus;
+
+  const order = await Order.findByIdAndUpdate(
+    id,
+    { $set: updateFields },
+    { new: true, runValidators: true }
+  )
+    .populate('items.product', 'title slug images price')
+    .lean();
+
+  if (!order) {
+    throw new ApiError(404, 'Order not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Order status updated successfully',
+    data: order,
+  });
+});
+

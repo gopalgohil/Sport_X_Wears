@@ -420,5 +420,198 @@ export async function getMyOrders(
   return data;
 }
 
+/**
+ * ----------------------------------------
+ * ADMIN API CLIENT METHODS
+ * ----------------------------------------
+ */
+
+/**
+ * Create a new product (Supports FormData or JSON object)
+ */
+export async function createProductAdmin(
+  payload: FormData | Record<string, any>,
+  token?: string | null
+): Promise<{ success: boolean; message: string; data: Product }> {
+  const url = `${API_BASE_URL}/products`;
+  const isFormData = payload instanceof FormData;
+
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: isFormData ? payload : JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to create product');
+  }
+
+  return data;
+}
+
+/**
+ * Update an existing product
+ */
+export async function updateProductAdmin(
+  id: string,
+  payload: FormData | Record<string, any>,
+  token?: string | null
+): Promise<{ success: boolean; message: string; data: Product }> {
+  const url = `${API_BASE_URL}/products/${id}`;
+  const isFormData = payload instanceof FormData;
+
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: isFormData ? payload : JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to update product');
+  }
+
+  return data;
+}
+
+/**
+ * Delete or toggle product status
+ */
+export async function deleteProductAdmin(
+  id: string,
+  permanent: boolean = false,
+  token?: string | null
+): Promise<{ success: boolean; message: string }> {
+  const url = `${API_BASE_URL}/products/${id}${permanent ? '?permanent=true' : ''}`;
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to delete product');
+  }
+
+  return data;
+}
+
+/**
+ * Get all orders for Admin with status filtering & search
+ */
+export async function getAllOrdersAdmin(
+  params: { status?: string; search?: string; page?: number; limit?: number } = {},
+  token?: string | null
+): Promise<{ success: boolean; total: number; page: number; totalPages: number; data: Order[] }> {
+  const query = new URLSearchParams();
+  if (params.status && params.status !== 'all') query.set('status', params.status);
+  if (params.search) query.set('search', params.search);
+  if (params.page) query.set('page', params.page.toString());
+  if (params.limit) query.set('limit', params.limit.toString());
+
+  const url = `${API_BASE_URL}/orders?${query.toString()}`;
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    headers,
+    cache: 'no-store',
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to fetch admin orders');
+  }
+
+  return data;
+}
+
+/**
+ * Update order or payment status
+ */
+export async function updateOrderStatusAdmin(
+  orderId: string,
+  updates: { orderStatus?: string; paymentStatus?: string },
+  token?: string | null
+): Promise<{ success: boolean; message: string; data: Order }> {
+  const url = `${API_BASE_URL}/orders/${orderId}/status`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(updates),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to update order status');
+  }
+
+  return data;
+}
+
+/**
+ * Create a new category
+ */
+export async function createCategoryAdmin(
+  payload: { name: string; description?: string; bannerImage?: string },
+  token?: string | null
+): Promise<{ success: boolean; message: string; data: Category }> {
+  const url = `${API_BASE_URL}/categories`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to create category');
+  }
+
+  return data;
+}
+
 
 

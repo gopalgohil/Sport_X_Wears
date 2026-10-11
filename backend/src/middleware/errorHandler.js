@@ -47,19 +47,17 @@ export const errorHandler = (err, req, res, next) => {
     error = new ApiError(401, 'Authentication token expired, please log in again');
   }
 
-  const statusCode = error.statusCode || 500;
-  const isProduction = process.env.NODE_ENV === 'production';
+  console.error('[Unhandled Server Error]:', err);
+
+  const statusCode = error.statusCode || (typeof error.status === 'number' ? error.status : 500);
 
   const responsePayload = {
     success: false,
-    message: error.message || 'Internal Server Error',
-    ...(error.errors && { errors: error.errors }),
-    ...(!isProduction && { stack: error.stack }),
+    message: err.message || error.message || 'Internal Server Error',
+    errorType: err.name || 'Error',
+    details: err.details || null,
+    stack: err.stack,
   };
-
-  if (!isProduction && statusCode === 500) {
-    console.error(`[Unhandled Server Error]`, err);
-  }
 
   res.status(statusCode).json(responsePayload);
 };

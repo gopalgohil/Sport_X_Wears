@@ -22,7 +22,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/';
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -34,12 +34,16 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  // If already authenticated, redirect
+  // If already authenticated, redirect (Admins auto-redirect to /admin)
   React.useEffect(() => {
     if (isAuthenticated) {
-      router.push(redirectUrl);
+      if (user?.role === 'admin' && (!redirectUrl || redirectUrl === '/')) {
+        router.push('/admin');
+      } else {
+        router.push(redirectUrl);
+      }
     }
-  }, [isAuthenticated, redirectUrl, router]);
+  }, [isAuthenticated, user, redirectUrl, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

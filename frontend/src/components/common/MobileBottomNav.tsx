@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Flame, ShoppingCart, User as UserIcon } from 'lucide-react';
+import { Home, Flame, ShoppingCart, User as UserIcon, ShieldCheck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -12,8 +12,10 @@ export const MobileBottomNav: React.FC = () => {
   const { totalItems, openCart } = useCart();
   const { user, isAuthenticated } = useAuth();
 
+  const isAdmin = user?.role === 'admin';
   const isHomeActive = pathname === '/';
   const isStoreActive = pathname.startsWith('/products');
+  const isAdminActive = pathname.startsWith('/admin');
   const isProfileActive = pathname.startsWith('/profile') || pathname.startsWith('/login') || pathname.startsWith('/register');
 
   return (
@@ -21,7 +23,7 @@ export const MobileBottomNav: React.FC = () => {
       aria-label="Mobile Navigation"
       className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-neutral-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] md:hidden safe-area-bottom"
     >
-      <div className="grid grid-cols-4 h-15 max-w-lg mx-auto items-center px-1">
+      <div className={`grid ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} h-15 max-w-lg mx-auto items-center px-1`}>
         {/* 1. HOME TAB */}
         <Link
           href="/"
@@ -72,7 +74,28 @@ export const MobileBottomNav: React.FC = () => {
           </span>
         </button>
 
-        {/* 4. ACCOUNT / PROFILE TAB */}
+        {/* 4. ADMIN TAB (Only shown for Admin users) */}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            prefetch={false}
+            className={`flex flex-col items-center justify-center py-1.5 transition-colors ${
+              isAdminActive
+                ? 'text-red-600 font-bold'
+                : 'text-neutral-700 hover:text-red-600 font-medium'
+            }`}
+          >
+            <div className="relative inline-flex items-center justify-center">
+              <ShieldCheck className={`w-5 h-5 transition-transform ${isAdminActive ? 'scale-110 text-red-600 stroke-[2.4]' : 'text-neutral-700 stroke-[1.8]'}`} />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            </div>
+            <span className="text-[10px] uppercase font-headline tracking-wider mt-1 text-red-600 font-bold">
+              Admin
+            </span>
+          </Link>
+        )}
+
+        {/* 5. ACCOUNT / PROFILE TAB */}
         <Link
           href={isAuthenticated ? '/profile' : '/login?redirect=/profile'}
           className={`flex flex-col items-center justify-center py-1.5 transition-colors ${

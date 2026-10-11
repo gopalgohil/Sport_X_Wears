@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -10,9 +10,6 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-
-// Load environment variables (.env)
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

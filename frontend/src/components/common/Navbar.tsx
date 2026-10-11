@@ -109,6 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
                       {user.role === 'admin' && (
                         <Link
                           href="/admin"
+                          prefetch={false}
                           onClick={() => setUserDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-red-600 transition-colors"
                         >

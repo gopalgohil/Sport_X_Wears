@@ -65,8 +65,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchSubmit, onSearchClick })
           {/* Athletic Brand Logo (Left Side on Desktop & Mobile) */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="flex items-center group">
-              <span className="font-headline text-xl sm:text-2xl md:text-3xl font-black tracking-tight uppercase italic text-neutral-950 flex items-center transition-transform group-hover:scale-[1.02]">
-                SPORT <span className="text-red-600 px-1 transform -skew-x-12 inline-block">X</span> WEAR
+              <span className="font-headline text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase italic text-neutral-950 flex items-center transition-transform group-hover:scale-[1.02]">
+                SPORT <span className="text-red-600 px-1 sm:px-1.5 transform -skew-x-12 inline-block">X</span> WEAR
               </span>
             </Link>
           </div>

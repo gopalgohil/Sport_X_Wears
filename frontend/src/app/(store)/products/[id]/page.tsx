@@ -17,11 +17,14 @@ import {
   Loader2,
   Heart,
   Share2,
+  Lock,
+  X,
 } from 'lucide-react';
 import { Product, AthleticSize } from '../../../../types';
 import { getProductById, getProducts } from '../../../../lib/api';
 import { formatPrice, getDiscountPercentage } from '../../../../lib/utils';
 import { useCart } from '../../../../context/CartContext';
+import { useAuth } from '../../../../context/AuthContext';
 import Navbar from '../../../../components/common/Navbar';
 import Footer from '../../../../components/common/Footer';
 import { ProductCard } from '../../../../components/product/ProductCard';
@@ -32,6 +35,7 @@ export default function ProductDetailPage() {
   const idOrSlug = params.id as string;
 
   const { addToCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -41,6 +45,16 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
+  const [loginToast, setLoginToast] = useState(false);
+
+  useEffect(() => {
+    if (loginToast) {
+      const timer = setTimeout(() => {
+        setLoginToast(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [loginToast]);
 
   // Fetch current product & related gear
   useEffect(() => {
@@ -138,6 +152,11 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
+    if (!isAuthenticated || !user) {
+      setLoginToast(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     addToCart(product, selectedSize, quantity);
     router.push('/checkout');
   };
@@ -145,6 +164,44 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col">
       <Navbar />
+
+      {/* Top Toast Notification: Login Required */}
+      {loginToast && (
+        <div className="fixed top-4 sm:top-6 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[100] max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-neutral-950 text-white rounded-xl p-3.5 sm:p-4 shadow-2xl border-2 border-red-600 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-red-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-headline text-xs font-black uppercase tracking-wider text-red-500">
+                  LOGIN REQUIRED
+                </p>
+                <p className="text-xs text-neutral-200 font-medium leading-snug mt-0.5">
+                  Please login to buy this product and place your order.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href={`/login?redirect=/products/${product.slug || product._id}`}
+                className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-headline text-[11px] font-black uppercase tracking-wider px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shadow-sm"
+              >
+                LOGIN NOW &rarr;
+              </Link>
+              <button
+                type="button"
+                onClick={() => setLoginToast(false)}
+                className="p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close Notification"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1">
         {/* Breadcrumb Navigation */}

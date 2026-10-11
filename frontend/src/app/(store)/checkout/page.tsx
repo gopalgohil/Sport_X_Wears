@@ -85,8 +85,16 @@ export default function CheckoutPage() {
   });
 
   const [selectedSavedIndex, setSelectedSavedIndex] = useState<number | null>(0);
+  const [loginToast, setLoginToast] = useState(false);
 
-  // Pre-fill user data by default from user saved address in profile or localStorage
+  useEffect(() => {
+    if (loginToast) {
+      const timer = setTimeout(() => {
+        setLoginToast(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [loginToast]);
   useEffect(() => {
     if (user) {
       const defaultIdx = user.addresses?.findIndex((a) => a.isDefault);
@@ -317,6 +325,12 @@ export default function CheckoutPage() {
     paymentMethodUsed?: 'cod' | 'upi' | 'card',
     utrId?: string
   ) => {
+    if (!isAuthenticated || !user) {
+      setLoginToast(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setIsSubmitting(true);
     setGlobalError('');
 
@@ -411,6 +425,12 @@ export default function CheckoutPage() {
   const handleSubmitOrder = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
+    if (!isAuthenticated || !user) {
+      setLoginToast(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (items.length === 0) {
       setGlobalError('Your bag is empty.');
       return;
@@ -462,6 +482,43 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-[#f1f2f4] text-neutral-900 flex flex-col pb-24 sm:pb-12">
+      {/* Top Toast Notification: Login Required */}
+      {loginToast && (
+        <div className="fixed top-4 sm:top-6 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[100] max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-neutral-950 text-white rounded-xl p-3.5 sm:p-4 shadow-2xl border-2 border-red-600 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-red-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-headline text-xs font-black uppercase tracking-wider text-red-500">
+                  LOGIN REQUIRED
+                </p>
+                <p className="text-xs text-neutral-200 font-medium leading-snug mt-0.5">
+                  Please login to buy this product and place your order.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/login?redirect=/checkout"
+                className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-headline text-[11px] font-black uppercase tracking-wider px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shadow-sm"
+              >
+                LOGIN NOW &rarr;
+              </Link>
+              <button
+                type="button"
+                onClick={() => setLoginToast(false)}
+                className="p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close Notification"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ====================================================================
           1. AMAZON / FLIPKART MOBILE HEADER & STEPPER
           ==================================================================== */}

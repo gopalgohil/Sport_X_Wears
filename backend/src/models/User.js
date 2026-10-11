@@ -28,9 +28,13 @@ const addressSchema = new mongoose.Schema(
     },
     country: {
       type: String,
-      required: [true, 'Country is required'],
+      default: 'IN',
       trim: true,
-      default: 'US',
+    },
+    addressType: {
+      type: String,
+      enum: ['home', 'work', 'other'],
+      default: 'home',
     },
     isDefault: {
       type: Boolean,

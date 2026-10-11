@@ -42,19 +42,19 @@ export const Footer: React.FC = () => {
             {/* Newsletter Subscription */}
             <div className="pt-2">
               <p className="font-headline text-sm font-bold uppercase tracking-wider text-neutral-800 mb-2">
-                JOIN THE ATHLETE SQUAD (GET 15% OFF)
+                SUBSCRIBE FOR EXCLUSIVE OFFERS & DROPS
               </p>
               <form onSubmit={(e) => e.preventDefault()} className="flex max-w-md">
                 <input
                   type="email"
-                  placeholder="Enter athlete email address..."
+                  placeholder="Enter your email address..."
                   className="bg-white border border-neutral-300 px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-red-600 flex-1 shadow-xs"
                 />
                 <button
                   type="submit"
                   className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 font-headline text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  JOIN <ArrowRight className="w-4 h-4" />
+                  SUBSCRIBE <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
             </div>
@@ -89,14 +89,14 @@ export const Footer: React.FC = () => {
           {/* Column 2: Technology */}
           <div>
             <h5 className="font-headline text-base font-bold uppercase tracking-wider text-neutral-950 mb-4">
-              INNOVATION
+              ABOUT US
             </h5>
             <ul className="space-y-2.5 text-sm text-neutral-600">
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">AeroVent™ Mesh</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">ThermoFlex™ Weave</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">DuraShield™ Coating</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">Athletic Lab Testing</a></li>
-              <li><a href="#products-section" className="hover:text-red-600 transition-colors">Sustainable Fibers</a></li>
+              <li><Link href="/products" className="hover:text-red-600 transition-colors">Our Story</Link></li>
+              <li><Link href="/products" className="hover:text-red-600 transition-colors">Quality Assurance</Link></li>
+              <li><Link href="/products" className="hover:text-red-600 transition-colors">Track Your Order</Link></li>
+              <li><Link href="/products" className="hover:text-red-600 transition-colors">Shipping Policy</Link></li>
+              <li><Link href="/products" className="hover:text-red-600 transition-colors">Return & Refund</Link></li>
             </ul>
           </div>
 
@@ -106,11 +106,11 @@ export const Footer: React.FC = () => {
               SUPPORT
             </h5>
             <ul className="space-y-2.5 text-sm text-neutral-600">
-              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Order Tracking</span></li>
-              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Size Guide & Fit</span></li>
-              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Shipping & Customs</span></li>
-              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Sweat Trial Returns</span></li>
-              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Contact Athletes Desk</span></li>
+              <li><Link href="/orders" className="hover:text-red-600 transition-colors">My Orders</Link></li>
+              <li><Link href="/profile" className="hover:text-red-600 transition-colors">Saved Addresses</Link></li>
+              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Size Guide</span></li>
+              <li><span className="hover:text-red-600 transition-colors cursor-pointer">7-Day Return Policy</span></li>
+              <li><span className="hover:text-red-600 transition-colors cursor-pointer">Contact Support</span></li>
             </ul>
           </div>
         </div>

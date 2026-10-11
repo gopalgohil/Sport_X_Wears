@@ -20,11 +20,11 @@ import {
 export default function ProductsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ALL GEAR');
+  const [selectedCategory, setSelectedCategory] = useState('ALL PRODUCTS');
   const [selectedSize, setSelectedSize] = useState('ALL');
   const [sortBy, setSortBy] = useState('featured');
   const [categoriesList, setCategoriesList] = useState<string[]>([
-    'ALL GEAR',
+    'ALL PRODUCTS',
     'Sports T-Shirts',
     'Track Pants',
     'Sports Caps',
@@ -41,7 +41,7 @@ export default function ProductsPage() {
     }
     const cachedCats = getCachedCategories();
     if (cachedCats && cachedCats.length > 0) {
-      setCategoriesList(['ALL GEAR', ...cachedCats.map((c) => c.name)]);
+      setCategoriesList(['ALL PRODUCTS', ...cachedCats.map((c) => c.name)]);
     }
   }, []);
 
@@ -60,7 +60,7 @@ export default function ProductsPage() {
       try {
         const res = await getCategories();
         if (res.success && res.data && res.data.length > 0) {
-          setCategoriesList(['ALL GEAR', ...res.data.map((c) => c.name)]);
+          setCategoriesList(['ALL PRODUCTS', ...res.data.map((c) => c.name)]);
           saveCachedCategories(res.data);
         }
       } catch (err) {
@@ -74,7 +74,7 @@ export default function ProductsPage() {
     async function loadProducts() {
       try {
         const res = await getProducts({
-          category: selectedCategory !== 'ALL GEAR' ? selectedCategory : undefined,
+          category: selectedCategory !== 'ALL PRODUCTS' ? selectedCategory : undefined,
           size: selectedSize !== 'ALL' ? selectedSize : undefined,
           sort: sortBy,
           search: searchQuery.trim() || undefined,
@@ -94,7 +94,7 @@ export default function ProductsPage() {
 
   const handleSearch = (newQuery: string) => {
     setSearchQuery(newQuery);
-    setSelectedCategory('ALL GEAR');
+    setSelectedCategory('ALL PRODUCTS');
     setSelectedSize('ALL');
     if (newQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(newQuery.trim())}`);
@@ -155,7 +155,7 @@ export default function ProductsPage() {
             <div className="py-24 flex flex-col items-center justify-center gap-3">
               <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
               <p className="font-headline text-xs font-bold uppercase tracking-widest text-neutral-500">
-                FETCHING ATHLETIC GEAR...
+                LOADING PRODUCTS...
               </p>
             </div>
           ) : products.length === 0 ? (
@@ -168,20 +168,20 @@ export default function ProductsPage() {
               </h3>
               <p className="text-sm text-neutral-500 mb-6">
                 {searchQuery
-                  ? `No gear found for "${searchQuery}". Try a different keyword like "Caps", "T-Shirts", or "Track Pants".`
+                  ? `No products found for "${searchQuery}". Try searching for T-Shirts, Track Pants, or Caps.`
                   : 'No products match the selected filters.'}
               </p>
               <button
                 type="button"
                 onClick={() => {
                   handleSearch('');
-                  setSelectedCategory('ALL GEAR');
+                  setSelectedCategory('ALL PRODUCTS');
                   setSelectedSize('ALL');
                 }}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-950 hover:bg-red-600 text-white font-headline text-xs font-extrabold uppercase tracking-wider rounded transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>VIEW ALL GEAR</span>
+                <span>VIEW ALL PRODUCTS</span>
               </button>
             </div>
           ) : (

@@ -149,7 +149,7 @@ function OrderSuccessContent() {
           </h1>
 
           <p className="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
-            Your high-performance athletic kit has entered priority fulfillment. We will notify you via SMS and email when your parcel is dispatched.
+            Your order has been placed successfully and is being processed. We will notify you via email when your parcel is dispatched.
           </p>
 
           {orderId && (

@@ -148,7 +148,7 @@ export default function HomePage() {
 
                 {/* Subtitle */}
                 <p className="text-sm sm:text-base lg:text-lg text-neutral-600 font-normal max-w-xl leading-relaxed">
-                  Engineered with AeroVent™ hyper-cooling fabrics and zero-abrasion seam technology. Tested by elite athletes for uncompromising endurance.
+                  High performance athletic activewear and sports gear designed for maximum comfort, durability, and training.
                 </p>
 
                 {/* Action CTA Buttons */}
@@ -186,15 +186,15 @@ export default function HomePage() {
                   <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 p-3 sm:p-4 bg-white/95 backdrop-blur-md border border-neutral-200 shadow-lg rounded-lg lg:rounded-none">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-headline text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-red-600">
-                          PRO-SERIES DROP 01
+                        <p className="font-headline text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-red-600">
+                          NEW COLLECTION
                         </p>
                         <h4 className="font-headline text-xs sm:text-base font-black uppercase text-neutral-950">
-                          AEROVENT™ HYPER-COOLING SYSTEM
+                          PREMIUM ATHLETIC SPORTSWEAR
                         </h4>
                       </div>
-                      <span className="font-headline text-[10px] sm:text-xs font-bold uppercase px-2 sm:px-2.5 py-0.5 sm:py-1 bg-neutral-950 text-white rounded-xs">
-                        TESTED
+                      <span className="font-headline text-[10px] sm:text-xs font-bold uppercase px-2.5 sm:px-3 py-1 bg-neutral-950 text-white rounded-xs">
+                        FEATURED
                       </span>
                     </div>
                   </div>

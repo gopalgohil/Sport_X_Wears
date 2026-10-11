@@ -194,19 +194,19 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                 )}
               </button>
 
-              {/* Fabric Details Accordion / Specs */}
+              {/* Trust Guarantees */}
               <div className="border-t border-neutral-200 pt-4 space-y-2 text-xs text-neutral-600">
                 <div className="flex items-center gap-2 font-bold text-neutral-900 uppercase">
                   <ShieldCheck className="w-4 h-4 text-neutral-900" />
-                  <span>AeroVent™ 4-way micro-cooling mesh</span>
+                  <span>100% Genuine & Authentic Quality</span>
                 </div>
                 <div className="flex items-center gap-2 font-bold text-neutral-900 uppercase">
                   <ShieldCheck className="w-4 h-4 text-neutral-900" />
-                  <span>Anti-odor ionic silver fiber treatment</span>
+                  <span>Fast Express Shipping</span>
                 </div>
                 <div className="flex items-center gap-2 font-bold text-neutral-900 uppercase">
                   <ShieldCheck className="w-4 h-4 text-neutral-900" />
-                  <span>Zero-friction athletic flatlock seams</span>
+                  <span>Easy 7-Day Return & Exchange</span>
                 </div>
               </div>
             </div>

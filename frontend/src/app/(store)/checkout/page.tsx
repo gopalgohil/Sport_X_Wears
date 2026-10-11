@@ -81,25 +81,41 @@ export default function CheckoutPage() {
     postalCode: '',
     addressType: 'home', // 'home' | 'work'
     deliveryInstructions: '',
-    saveAddressToProfile: true,
+    saveAddressToProfile: false,
   });
 
-  // Pre-fill user data when authenticated OR from locally saved default address
+  const [selectedSavedIndex, setSelectedSavedIndex] = useState<number | null>(0);
+
+  // Pre-fill user data by default from user saved address in profile or localStorage
   useEffect(() => {
     if (user) {
+      const defaultIdx = user.addresses?.findIndex((a) => a.isDefault);
+      const resolvedIdx = defaultIdx !== undefined && defaultIdx >= 0 ? defaultIdx : 0;
+      setSelectedSavedIndex(user.addresses && user.addresses.length > 0 ? resolvedIdx : null);
+
       const defaultAddr =
-        user.addresses?.find((a) => a.isDefault) || user.addresses?.[0];
+        (user.addresses && user.addresses[resolvedIdx]) ||
+        user.addresses?.[0];
+
+      let localSaved: any = null;
+      try {
+        const savedStr = localStorage.getItem('sportxwear_saved_address');
+        if (savedStr) localSaved = JSON.parse(savedStr);
+      } catch (e) {}
+
+      const chosenAddr = defaultAddr || localSaved;
+
       setFormData((prev) => ({
         ...prev,
-        name: prev.name || user.name || '',
-        email: prev.email || user.email || '',
-        phone: prev.phone || user.phone || '',
-        street: prev.street || defaultAddr?.street || '',
-        city: prev.city || defaultAddr?.city || '',
-        state: prev.state || defaultAddr?.state || 'Maharashtra',
-        postalCode: prev.postalCode || defaultAddr?.postalCode || '',
+        name: user.name || prev.name || '',
+        email: user.email || prev.email || '',
+        phone: user.phone || chosenAddr?.phone || prev.phone || '',
+        street: chosenAddr?.street || prev.street || '',
+        city: chosenAddr?.city || prev.city || '',
+        state: chosenAddr?.state || prev.state || 'Maharashtra',
+        postalCode: chosenAddr?.postalCode || prev.postalCode || '',
         addressType:
-          (defaultAddr?.addressType as 'home' | 'work') ||
+          (chosenAddr?.addressType as 'home' | 'work') ||
           prev.addressType ||
           'home',
       }));
@@ -534,31 +550,86 @@ export default function CheckoutPage() {
                 {isAuthenticated && user ? (
                   <div className="px-4 py-2.5 bg-neutral-900 text-white flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
                       <span>
-                        Logged in as <strong className="text-red-400 font-headline uppercase tracking-wide">{user.name}</strong> ({user.email})
+                        Logged in as <strong className="text-white font-headline uppercase">{user.name}</strong> ({user.email})
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                      Orders Auto-Synced
-                    </span>
                   </div>
                 ) : (
-                  <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-[11px] flex items-center justify-between font-medium">
-                    <span>
-                      Have a SPORT X WEAR athlete account?
-                    </span>
+                  <div className="px-4 py-2 bg-neutral-50 border-b border-neutral-200 text-neutral-700 text-xs flex items-center justify-between font-medium">
+                    <span>Already have an account?</span>
                     <Link
                       href="/login?redirect=/checkout"
-                      className="font-bold text-red-600 hover:underline uppercase text-[10px] tracking-wider"
+                      className="font-bold text-red-600 hover:underline uppercase text-[11px] tracking-wider"
                     >
-                      Sign In for Express Checkout &rarr;
+                      Sign In &rarr;
                     </Link>
                   </div>
                 )}
 
                 {/* Form Inputs */}
                 <div className="p-4 sm:p-5 space-y-4">
+                  {/* Saved Addresses Selector (By Default Auto-Selected) */}
+                  {user?.addresses && user.addresses.length > 0 && (
+                    <div className="space-y-2 pb-2 border-b border-neutral-100">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-900">
+                          Your Saved Addresses (Default Selected)
+                        </label>
+                        <Link
+                          href="/profile"
+                          className="text-[11px] font-bold text-red-600 hover:underline"
+                        >
+                          Manage &rarr;
+                        </Link>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {user.addresses.map((addr, idx) => {
+                          const isSelected = selectedSavedIndex === idx;
+                          return (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                setSelectedSavedIndex(idx);
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  street: addr.street || '',
+                                  city: addr.city || '',
+                                  state: addr.state || 'Maharashtra',
+                                  postalCode: addr.postalCode || '',
+                                  addressType: (addr.addressType as 'home' | 'work') || 'home',
+                                }));
+                              }}
+                              className={`p-3 rounded-lg border-2 text-left cursor-pointer transition-all ${
+                                isSelected
+                                  ? 'border-neutral-950 bg-neutral-50/90 shadow-xs'
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-neutral-200 text-neutral-800">
+                                  {addr.addressType || 'Home'}
+                                </span>
+                                {addr.isDefault && (
+                                  <span className="text-[9px] font-bold uppercase text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs font-bold text-neutral-950 truncate">
+                                {user.name}
+                              </p>
+                              <p className="text-[11px] text-neutral-600 leading-snug line-clamp-2 mt-0.5">
+                                {addr.street}, {addr.city}, {addr.state} - {addr.postalCode}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   {/* Name & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>

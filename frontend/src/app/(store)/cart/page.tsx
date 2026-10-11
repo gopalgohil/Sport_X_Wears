@@ -74,17 +74,17 @@ export default function CartPage() {
               <ShoppingBag className="w-8 h-8" />
             </div>
             <h2 className="font-headline text-2xl font-black uppercase text-neutral-950">
-              YOUR ATHLETIC BAG IS EMPTY
+              YOUR CART IS EMPTY
             </h2>
             <p className="text-xs sm:text-sm text-neutral-500">
-              Looks like you haven&apos;t added any championship gear to your kit yet. Explore our latest drops!
+              Looks like you haven&apos;t added any items to your cart yet. Explore our latest collection!
             </p>
             <div className="pt-2">
               <Link
                 href="/products"
                 className="inline-flex items-center gap-2 bg-neutral-950 hover:bg-red-600 text-white font-headline text-xs sm:text-sm font-extrabold uppercase tracking-wider px-6 py-3.5 rounded-lg transition-colors cursor-pointer shadow-md"
               >
-                EXPLORE GEAR <ArrowRight className="w-4 h-4" />
+                EXPLORE PRODUCTS <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function CartPage() {
               <span className="text-neutral-900 font-semibold">Shopping Bag</span>
             </div>
             <h1 className="font-headline text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-950">
-              YOUR ATHLETIC BAG ({totalItems} {totalItems === 1 ? 'ITEM' : 'ITEMS'})
+              SHOPPING CART ({totalItems} {totalItems === 1 ? 'ITEM' : 'ITEMS'})
             </h1>
           </div>
 
@@ -264,7 +264,7 @@ export default function CartPage() {
 
               {couponApplied && (
                 <p className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 10% ATHLETE DISCOUNT APPLIED!
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 10% DISCOUNT APPLIED!
                 </p>
               )}
               {couponError && (
@@ -326,7 +326,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <RotateCcw className="w-3.5 h-3.5 text-neutral-700" />
-                  <span>EASY 30-DAY RETURN</span>
+                  <span>EASY 7-DAY RETURN</span>
                 </div>
               </div>
             </div>

@@ -31,10 +31,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       ? product.category.name
       : product.category;
 
-  const rating = product.rating || 4.5;
-  const reviewsCount =
-    product.reviewsCount || Math.floor((product.price * 7) % 350) + 42;
-
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -61,23 +57,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </Link>
 
         {/* Badges Container */}
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1 z-10 pointer-events-none">
-          {product.badge ? (
+        {discountPercent > 0 && (
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
             <span className="bg-red-600 text-white font-headline text-[10px] sm:text-xs font-extrabold tracking-wider uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 shadow-xs">
-              {product.badge}
+              {discountPercent}% OFF
             </span>
-          ) : discountPercent > 0 ? (
-            <span className="bg-red-600 text-white font-headline text-[10px] sm:text-xs font-extrabold tracking-wider uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 shadow-xs">
-              SAVE {discountPercent}%
-            </span>
-          ) : null}
-
-          {product.tech && (
-            <span className="bg-neutral-950/80 backdrop-blur-xs text-white font-headline text-[9px] sm:text-[10px] font-bold tracking-widest uppercase px-1.5 py-0.5">
-              {product.tech}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Wishlist Button */}
         <button

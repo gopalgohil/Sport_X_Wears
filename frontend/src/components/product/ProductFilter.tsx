@@ -40,7 +40,9 @@ export const ProductFilter: React.FC<ProductFilterProps> = ({
   const [tempCategory, setTempCategory] = useState(selectedCategory);
   const [tempSize, setTempSize] = useState(selectedSize);
 
-  const activeFiltersCount = (selectedSize !== 'ALL' ? 1 : 0) + (selectedCategory !== 'ALL GEAR' ? 1 : 0);
+  const activeFiltersCount =
+    (selectedSize !== 'ALL' ? 1 : 0) +
+    (selectedCategory !== 'ALL PRODUCTS' && selectedCategory !== 'ALL GEAR' ? 1 : 0);
 
   const handleOpenFilterModal = () => {
     setTempCategory(selectedCategory);
@@ -55,9 +57,10 @@ export const ProductFilter: React.FC<ProductFilterProps> = ({
   };
 
   const handleClearFilters = () => {
-    setTempCategory('ALL GEAR');
+    const defaultCat = categories.includes('ALL PRODUCTS') ? 'ALL PRODUCTS' : 'ALL GEAR';
+    setTempCategory(defaultCat);
     setTempSize('ALL');
-    onSelectCategory('ALL GEAR');
+    onSelectCategory(defaultCat);
     onSelectSize('ALL');
     setShowFilterModal(false);
   };

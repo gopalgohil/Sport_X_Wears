@@ -136,19 +136,32 @@ export default function ProfilePage() {
     setIsSavingAddress(true);
     setAddressMessage('');
     try {
+      const isFirstAddress = (user?.addresses?.length || 0) === 0;
+      const newAddressObj = {
+        street: newStreet.trim(),
+        city: newCity.trim(),
+        state: newState.trim(),
+        postalCode: newPostalCode.trim(),
+        country: 'IN',
+        addressType: newAddressType,
+        isDefault: isFirstAddress,
+      };
+
       const updatedAddresses = [
-        {
-          street: newStreet.trim(),
-          city: newCity.trim(),
-          state: newState.trim(),
-          postalCode: newPostalCode.trim(),
-          addressType: newAddressType,
-          isDefault: (user?.addresses?.length || 0) === 0,
-        },
+        newAddressObj,
         ...(user?.addresses || []),
       ];
 
       await updateProfile({ addresses: updatedAddresses });
+
+      // Save default address in localStorage for instant checkout auto-fill
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'sportxwear_saved_address',
+          JSON.stringify(newAddressObj)
+        );
+      }
+
       setShowAddAddressModal(false);
       setNewStreet('');
       setNewCity('');
@@ -167,6 +180,12 @@ export default function ProfilePage() {
     const filtered = user.addresses.filter((_, i) => i !== indexToDelete);
     try {
       await updateProfile({ addresses: filtered });
+      if (typeof window !== 'undefined' && filtered.length > 0) {
+        localStorage.setItem(
+          'sportxwear_saved_address',
+          JSON.stringify(filtered[0])
+        );
+      }
     } catch (err) {
       console.error('Failed to delete address', err);
     }
@@ -180,6 +199,12 @@ export default function ProfilePage() {
     }));
     try {
       await updateProfile({ addresses: updated });
+      if (typeof window !== 'undefined' && updated[selectedIndex]) {
+        localStorage.setItem(
+          'sportxwear_saved_address',
+          JSON.stringify(updated[selectedIndex])
+        );
+      }
     } catch (err) {
       console.error('Failed to set default address', err);
     }

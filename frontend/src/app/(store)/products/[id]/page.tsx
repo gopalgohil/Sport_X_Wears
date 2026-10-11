@@ -203,16 +203,13 @@ export default function ProductDetailPage() {
                 />
 
                 {/* Top Badges */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                  {discountPercent > 0 && (
+                {discountPercent > 0 && (
+                  <div className="absolute top-4 left-4 z-10">
                     <span className="bg-red-600 text-white font-headline text-xs font-black uppercase tracking-wider px-3 py-1 shadow-sm">
-                      SAVE {discountPercent}%
+                      {discountPercent}% OFF
                     </span>
-                  )}
-                  <span className="bg-neutral-950 text-white font-headline text-xs font-bold uppercase tracking-widest px-3 py-1">
-                    PRO-GRADE
-                  </span>
-                </div>
+                  </div>
+                )}
 
                 {/* Top Right Wishlist & Share */}
                 <div className="absolute top-4 right-4 flex gap-2 z-10">
@@ -362,16 +359,16 @@ export default function ProductDetailPage() {
                 {/* Trust Highlights */}
                 <div className="grid grid-cols-3 gap-2 pt-4 border-t border-neutral-100 text-center text-[11px] font-semibold text-neutral-600">
                   <div className="p-2.5 bg-neutral-50 border border-neutral-200 flex flex-col items-center gap-1">
-                    <Truck className="w-4 h-4 text-red-600" />
+                    <Truck className="w-4 h-4 text-neutral-800" />
                     <span>Free Shipping &gt; ₹1,999</span>
                   </div>
                   <div className="p-2.5 bg-neutral-50 border border-neutral-200 flex flex-col items-center gap-1">
-                    <RotateCcw className="w-4 h-4 text-red-600" />
-                    <span>30-Day Sweat Trial</span>
+                    <RotateCcw className="w-4 h-4 text-neutral-800" />
+                    <span>Easy 7-Day Returns</span>
                   </div>
                   <div className="p-2.5 bg-neutral-50 border border-neutral-200 flex flex-col items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-red-600" />
-                    <span>100% Olympic Grade</span>
+                    <ShieldCheck className="w-4 h-4 text-neutral-800" />
+                    <span>100% Genuine Product</span>
                   </div>
                 </div>
               </div>

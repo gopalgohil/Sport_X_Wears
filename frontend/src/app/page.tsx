@@ -36,9 +36,13 @@ export default function HomePage() {
 
   // Sync cached data on client mount immediately
   useEffect(() => {
-    const cached = getCachedProducts();
-    if (cached && cached.length > 0) {
-      setProducts(cached);
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const hasSearch = params?.get('search');
+    if (!hasSearch) {
+      const cached = getCachedProducts();
+      if (cached && cached.length > 0) {
+        setProducts(cached);
+      }
     }
     const cachedCats = getCachedCategories();
     if (cachedCats && cachedCats.length > 0) {
@@ -88,9 +92,11 @@ export default function HomePage() {
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.success && Array.isArray(res.data)) {
           setProducts(res.data);
-          saveCachedProducts(res.data);
+          if (!searchQuery.trim() && selectedCategory === 'ALL GEAR' && selectedSize === 'ALL') {
+            saveCachedProducts(res.data);
+          }
         }
       } catch (err) {
         console.error('Failed to load dynamic products:', err);

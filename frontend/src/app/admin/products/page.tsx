@@ -41,7 +41,7 @@ export default function AdminProductsPage() {
     setLoading(true);
     try {
       const [prodRes, catRes] = await Promise.all([
-        getProducts({ limit: 100 }), // admin view gets all
+        getProducts({ limit: 100, includeInactive: true }), // admin view gets all including inactive
         getCategories(),
       ]);
 
@@ -91,6 +91,9 @@ export default function AdminProductsPage() {
     setIsDeleting(true);
     try {
       await deleteProductAdmin(deleteModalProduct._id, permanent, token);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('sportxwear_cached_products_v2');
+      }
       setActionMessage(
         permanent
           ? `Product "${deleteModalProduct.title}" permanently deleted.`

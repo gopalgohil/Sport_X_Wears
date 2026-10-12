@@ -26,22 +26,6 @@ export const FALLBACK_CATEGORIES: Category[] = [
 
 export const FALLBACK_PRODUCTS: Product[] = [
   {
-    _id: '6acb103f3f85bf49e903a5d4',
-    title: 'Nike T-shirt',
-    slug: 'nike-t-shirt',
-    category: FALLBACK_CATEGORIES[0],
-    description: 'Premium quality athletic training t-shirt built with moisture-wicking fabric for maximum comfort.',
-    price: 1000,
-    discountPrice: 493,
-    sizes: ['M', 'L', 'XL'],
-    images: [
-      'https://res.cloudinary.com/k55mdc5l/image/upload/v1791692862/sportxwear/products/1791692861836_sport_x_wear.webp',
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
-    ],
-    stock: 7,
-    isActive: true,
-  },
-  {
     _id: '6ac74f2c9e6cb9a296c7805b',
     title: 'Pro-Vent Mesh Seamless Tee',
     slug: 'pro-vent-mesh-seamless-tee',

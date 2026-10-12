@@ -13,6 +13,7 @@ export interface GetProductsParams {
   maxPrice?: number;
   page?: number;
   limit?: number;
+  includeInactive?: boolean;
 }
 
 export interface ProductsResponse {
@@ -43,7 +44,7 @@ export async function getProducts(
 ): Promise<ProductsResponse> {
   const query = new URLSearchParams();
 
-  if (params.category && params.category !== 'ALL GEAR') {
+  if (params.category && params.category !== 'ALL GEAR' && params.category !== 'ALL PRODUCTS') {
     query.set('category', params.category);
   }
   if (params.size && params.size !== 'ALL') {
@@ -67,12 +68,15 @@ export async function getProducts(
   if (params.limit) {
     query.set('limit', params.limit.toString());
   }
+  if (params.includeInactive) {
+    query.set('includeInactive', 'true');
+  }
 
   const url = `${API_BASE_URL}/products?${query.toString()}`;
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: 30 }, // Vercel Edge caching (revalidates every 30s)
+      cache: 'no-store',
     });
 
     if (!res.ok) {
@@ -80,19 +84,34 @@ export async function getProducts(
     }
 
     const data = await res.json();
-    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+    if (data.success && Array.isArray(data.data)) {
       return data;
     }
     return {
       success: true,
-      count: FALLBACK_PRODUCTS.length,
-      total: FALLBACK_PRODUCTS.length,
+      count: 0,
+      total: 0,
       page: 1,
-      totalPages: 1,
-      data: FALLBACK_PRODUCTS,
+      totalPages: 0,
+      data: [],
     };
   } catch (error) {
-    console.warn('[API getProducts Warning - using instant cache]:', error);
+    console.warn('[API getProducts Warning]:', error);
+    // When searching or filtering, do NOT return fallback mock products
+    if (
+      params.search ||
+      (params.category && params.category !== 'ALL GEAR' && params.category !== 'ALL PRODUCTS') ||
+      params.size
+    ) {
+      return {
+        success: true,
+        count: 0,
+        total: 0,
+        page: 1,
+        totalPages: 0,
+        data: [],
+      };
+    }
     return {
       success: true,
       count: FALLBACK_PRODUCTS.length,
@@ -112,7 +131,7 @@ export async function getCategories(): Promise<CategoriesResponse> {
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
 
     if (!res.ok) {
@@ -120,16 +139,16 @@ export async function getCategories(): Promise<CategoriesResponse> {
     }
 
     const data = await res.json();
-    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+    if (data.success && Array.isArray(data.data)) {
       return data;
     }
     return {
       success: true,
-      count: FALLBACK_CATEGORIES.length,
-      data: FALLBACK_CATEGORIES,
+      count: 0,
+      data: [],
     };
   } catch (error) {
-    console.warn('[API getCategories Warning - using instant cache]:', error);
+    console.warn('[API getCategories Warning]:', error);
     return {
       success: true,
       count: FALLBACK_CATEGORIES.length,

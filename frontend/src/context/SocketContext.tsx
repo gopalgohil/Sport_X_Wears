@@ -127,13 +127,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Native browser push permission disabled as notifications are displayed in top navbar bell
   const requestNotificationPermission = useCallback(async () => {
-    // Intentionally no-op to prevent OS desktop notification prompts
+    // Intentionally no-op: Windows / OS desktop notifications are permanently disabled
   }, []);
-
-  // Dispatch browser / OS push notification (Disabled to avoid duplicate bottom-right notifications)
-  const triggerBrowserPush = (_title: string, _body: string) => {
-    // Intentionally no-op: user prefers in-app top bell notification without bottom-right desktop popups
-  };
 
   // Handle incoming notification
   const handleIncomingNotification = useCallback(
@@ -141,14 +136,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // 1. Play audio chime
       playChimeSound();
 
-      // 2. Trigger native OS / Mobile push notification
-      triggerBrowserPush(notif.title, notif.message);
-
-      // 3. Update state
+      // 2. Update state in top notification bell
       setNotifications((prev) => [notif, ...prev.filter((n) => n._id !== notif._id)]);
       setUnreadCount((prev) => prev + 1);
 
-      // 4. Show live floating alert banner
+      // 3. Show in-app floating alert banner
       setLatestAlert(notif);
       if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
       alertTimerRef.current = setTimeout(() => {

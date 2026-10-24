@@ -12,9 +12,11 @@ import {
   Save,
   ArrowLeft,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { Product, Category, AthleticSize } from '@/types';
 import { getCategories, createProductAdmin, updateProductAdmin } from '@/lib/api';
+import { compressMultipleImages } from '@/lib/imageCompressor';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
@@ -56,6 +58,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
 
   // UI status
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -93,21 +96,37 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     setError(null);
   };
 
-  // Handle local file uploads
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle local file uploads with automatic mobile/desktop compression
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
       const totalImages = existingImages.length + newImageFiles.length + files.length;
       if (totalImages > 5) {
         setError('Maximum 5 images allowed per product.');
+        e.target.value = '';
         return;
       }
 
-      setNewImageFiles((prev) => [...prev, ...files]);
+      try {
+        setIsCompressing(true);
+        setError(null);
 
-      const previews = files.map((file) => URL.createObjectURL(file));
-      setNewImagePreviews((prev) => [...prev, ...previews]);
-      setError(null);
+        // Auto-compress high-resolution mobile photos to web-optimized sizes
+        const compressedFiles = await compressMultipleImages(files);
+
+        setNewImageFiles((prev) => [...prev, ...compressedFiles]);
+
+        const previews = compressedFiles.map((file) => URL.createObjectURL(file));
+        setNewImagePreviews((prev) => [...prev, ...previews]);
+      } catch (err: any) {
+        console.error('Image optimization fallback:', err);
+        setNewImageFiles((prev) => [...prev, ...files]);
+        const previews = files.map((file) => URL.createObjectURL(file));
+        setNewImagePreviews((prev) => [...prev, ...previews]);
+      } finally {
+        setIsCompressing(false);
+        e.target.value = '';
+      }
     }
   };
 
@@ -500,16 +519,39 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             </div>
 
             {/* Upload Area */}
-            <label className="border-2 border-dashed border-neutral-800 hover:border-red-600/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-neutral-950/50 group">
-              <Upload className="w-8 h-8 text-neutral-500 group-hover:text-red-500 transition-colors mb-2" />
-              <p className="text-sm font-medium text-neutral-300">
-                Click to browse or drag & drop high-res athletic images
-              </p>
-              <p className="text-xs text-neutral-500 mt-1">PNG, JPG, WebP up to 5MB</p>
+            <label
+              className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all bg-neutral-950/50 group ${
+                isCompressing
+                  ? 'border-red-500/50 cursor-wait bg-red-950/10'
+                  : 'border-neutral-800 hover:border-red-600/50 cursor-pointer'
+              }`}
+            >
+              {isCompressing ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-2" />
+                  <p className="text-sm font-semibold text-white">
+                    Optimizing photos for fast upload...
+                  </p>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Compressing high-res mobile photos without losing quality
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-neutral-500 group-hover:text-red-500 transition-colors mb-2" />
+                  <p className="text-sm font-medium text-neutral-300">
+                    Click to browse or drag & drop high-res athletic images
+                  </p>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    PNG, JPG, WebP • Auto-optimized for Mobile & PC
+                  </p>
+                </>
+              )}
               <input
                 type="file"
                 multiple
                 accept="image/*"
+                disabled={isCompressing}
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -622,11 +664,20 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
           <div className="flex items-center gap-4 pt-2">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCompressing}
               className="flex-1 sm:flex-none px-8 py-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-900/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
-              <span>{isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Publish Product'}</span>
+              {isCompressing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Optimizing Images...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Publish Product'}</span>
+                </>
+              )}
             </button>
 
             <Link

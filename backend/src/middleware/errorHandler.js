@@ -47,6 +47,19 @@ export const errorHandler = (err, req, res, next) => {
     error = new ApiError(401, 'Authentication token expired, please log in again');
   }
 
+  // Handle Multer upload errors
+  if (err.name === 'MulterError') {
+    let message = 'File upload error';
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'Selected image is too large. Maximum allowed size is 15MB per file.';
+    } else if (err.code === 'LIMIT_FILE_COUNT') {
+      message = 'Too many files uploaded. Maximum 5 images allowed.';
+    } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      message = `Unexpected file field: ${err.field || 'unknown'}`;
+    }
+    error = new ApiError(400, message);
+  }
+
   console.error('[Unhandled Server Error]:', err);
 
   const statusCode = error.statusCode || (typeof error.status === 'number' ? error.status : 500);

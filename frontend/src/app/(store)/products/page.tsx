@@ -3,18 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, X, Search, RotateCcw } from 'lucide-react';
-import { Product } from '../../../types';
+import { Product, Category } from '../../../types';
 import Navbar from '../../../components/common/Navbar';
 import Footer from '../../../components/common/Footer';
 import ProductGrid from '../../../components/product/ProductGrid';
 import ProductFilter from '../../../components/product/ProductFilter';
 import { getProducts, getCategories } from '../../../lib/api';
+import { filterProducts } from '../../../lib/utils';
 import {
   getCachedProducts,
   getCachedCategories,
   saveCachedProducts,
   saveCachedCategories,
   FALLBACK_PRODUCTS,
+  FALLBACK_CATEGORIES,
 } from '../../../lib/initialData';
 
 export default function ProductsPage() {
@@ -29,41 +31,64 @@ export default function ProductsPage() {
     'Track Pants',
     'Sports Caps',
   ]);
-  // Instant render on frame 0 (no 15-20s waiting)
+  const [categoriesData, setCategoriesData] = useState<Category[]>(FALLBACK_CATEGORIES);
+
+  // Master catalog holding full inventory
+  const [allProducts, setAllProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
+  // Displayed filtered products (updates in 0ms on click)
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync cached data on client mount immediately
+  // 1. Initial cached data load & URL params sync
   useEffect(() => {
-    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const hasSearch = params?.get('search');
-    if (!hasSearch) {
-      const cached = getCachedProducts();
-      if (cached && cached.length > 0) {
-        setProducts(cached);
-      }
-    }
-    const cachedCats = getCachedCategories();
-    if (cachedCats && cachedCats.length > 0) {
-      setCategoriesList(['ALL PRODUCTS', ...cachedCats.map((c) => c.name)]);
-    }
-  }, []);
+    let initialCat = 'ALL PRODUCTS';
+    let initialSearch = '';
 
-  useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlQuery = params.get('search') || '';
-      if (urlQuery) setSearchQuery(urlQuery);
-      const cat = params.get('category');
-      if (cat) setSelectedCategory(cat);
+      const cat = params.get('category') || '';
+      if (urlQuery) {
+        initialSearch = urlQuery;
+        setSearchQuery(urlQuery);
+      }
+      if (cat) {
+        initialCat = cat;
+        setSelectedCategory(cat);
+      }
+    }
+
+    const cachedCats = getCachedCategories();
+    if (cachedCats && cachedCats.length > 0) {
+      setCategoriesData(cachedCats);
+      setCategoriesList(['ALL PRODUCTS', ...cachedCats.map((c) => c.name)]);
+    }
+
+    const cached = getCachedProducts();
+    if (cached && cached.length > 0) {
+      setAllProducts(cached);
+      setProducts(
+        filterProducts(
+          cached,
+          {
+            category: initialCat,
+            size: 'ALL',
+            sort: 'featured',
+            search: initialSearch,
+          },
+          cachedCats || FALLBACK_CATEGORIES
+        )
+      );
     }
   }, []);
 
+  // 2. Load dynamic categories in background
   useEffect(() => {
     async function loadCategories() {
       try {
         const res = await getCategories();
         if (res.success && res.data && res.data.length > 0) {
+          setCategoriesData(res.data);
           setCategoriesList(['ALL PRODUCTS', ...res.data.map((c) => c.name)]);
           saveCachedCategories(res.data);
         }
@@ -74,8 +99,40 @@ export default function ProductsPage() {
     loadCategories();
   }, []);
 
+  // 3. Fetch full master catalog from server on initial load
   useEffect(() => {
-    async function loadProducts() {
+    async function loadFullCatalog() {
+      try {
+        const res = await getProducts({ limit: 100 });
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setAllProducts(res.data);
+          saveCachedProducts(res.data);
+        }
+      } catch (err) {
+        console.warn('Initial full catalog load notice:', err);
+      }
+    }
+    loadFullCatalog();
+  }, []);
+
+  // 4. Instant 0ms client-side filter whenever category, size, sort, or search changes
+  useEffect(() => {
+    // Immediate instant UI update on frame 0
+    const filtered = filterProducts(
+      allProducts,
+      {
+        category: selectedCategory,
+        size: selectedSize,
+        sort: sortBy,
+        search: searchQuery,
+      },
+      categoriesData
+    );
+    setProducts(filtered);
+
+    // Background server query
+    let isCancelled = false;
+    async function syncWithServer() {
       try {
         const res = await getProducts({
           category: selectedCategory !== 'ALL PRODUCTS' ? selectedCategory : undefined,
@@ -84,19 +141,25 @@ export default function ProductsPage() {
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data)) {
-          setProducts(res.data);
+        if (!isCancelled && res.success && Array.isArray(res.data)) {
+          if (res.data.length > 0) {
+            setProducts(res.data);
+          }
           if (!searchQuery.trim() && selectedCategory === 'ALL PRODUCTS' && selectedSize === 'ALL') {
+            setAllProducts(res.data);
             saveCachedProducts(res.data);
           }
         }
       } catch (err) {
-        console.error('Failed to load products:', err);
+        console.warn('Server sync error (kept instant client filtered results):', err);
       }
     }
 
-    loadProducts();
-  }, [selectedCategory, selectedSize, sortBy, searchQuery]);
+    syncWithServer();
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedCategory, selectedSize, sortBy, searchQuery, allProducts, categoriesData]);
 
   const handleSearch = (newQuery: string) => {
     setSearchQuery(newQuery);
@@ -148,7 +211,12 @@ export default function ProductsPage() {
           <ProductFilter
             categories={categoriesList}
             selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
+            onSelectCategory={(cat) => {
+              setSelectedCategory(cat);
+              if (cat !== 'ALL PRODUCTS') {
+                setSearchQuery('');
+              }
+            }}
             selectedSize={selectedSize}
             onSelectSize={setSelectedSize}
             sortBy={sortBy}

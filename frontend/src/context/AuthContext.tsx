@@ -175,6 +175,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      localStorage.removeItem('sportxwear_cart');
+      localStorage.removeItem('sportxwear_cart_guest');
     }
   };
 

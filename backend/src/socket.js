@@ -61,16 +61,28 @@ export const broadcastNewOrder = (notification) => {
 export const sendOrderStatusUpdate = (userId, notification, email = null) => {
   if (!ioInstance) return;
 
+  const payload = {
+    orderId: notification.order ? notification.order.toString() : null,
+    orderStatus: notification.meta?.orderStatus || null,
+    notification,
+  };
+
   // Broadcast to customer's personal channel by user ID
   if (userId) {
     ioInstance.to(`user:${userId}`).emit('order_status_notification', notification);
+    ioInstance.to(`user:${userId}`).emit('order_status_updated', payload);
   }
 
   // Also broadcast by customer email channel for guest or resilient routing
   if (email) {
     ioInstance.to(`user:${email.toLowerCase()}`).emit('order_status_notification', notification);
+    ioInstance.to(`user:${email.toLowerCase()}`).emit('order_status_updated', payload);
   }
 
   // Also broadcast to admin room so admin UI reflects live status sync
   ioInstance.to('admin-room').emit('order_status_notification', notification);
+  ioInstance.to('admin-room').emit('order_status_updated', payload);
+
+  // Global broadcast so any active customer tab displaying this order reflects the new status instantly
+  ioInstance.emit('order_status_updated', payload);
 };

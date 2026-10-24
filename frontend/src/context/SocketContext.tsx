@@ -125,33 +125,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [fetchNotificationsList]);
 
-  // Request browser desktop / mobile push notification permissions
+  // Native browser push permission disabled as notifications are displayed in top navbar bell
   const requestNotificationPermission = useCallback(async () => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'default') {
-        try {
-          await Notification.requestPermission();
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
+    // Intentionally no-op to prevent OS desktop notification prompts
   }, []);
 
-  // Dispatch browser / OS push notification
-  const triggerBrowserPush = (title: string, body: string) => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
-        try {
-          new Notification(title, {
-            body,
-            icon: '/favicon.ico',
-          });
-        } catch (e) {
-          // Push notifications in mobile browser
-        }
-      }
-    }
+  // Dispatch browser / OS push notification (Disabled to avoid duplicate bottom-right notifications)
+  const triggerBrowserPush = (_title: string, _body: string) => {
+    // Intentionally no-op: user prefers in-app top bell notification without bottom-right desktop popups
   };
 
   // Handle incoming notification

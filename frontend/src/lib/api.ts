@@ -96,29 +96,55 @@ export async function getProducts(
       data: [],
     };
   } catch (error) {
-    console.warn('[API getProducts Warning]:', error);
-    // When searching or filtering, do NOT return fallback mock products
-    if (
-      params.search ||
-      (params.category && params.category !== 'ALL GEAR' && params.category !== 'ALL PRODUCTS') ||
-      params.size
-    ) {
-      return {
-        success: true,
-        count: 0,
-        total: 0,
-        page: 1,
-        totalPages: 0,
-        data: [],
-      };
+    console.warn('[API getProducts Warning - Serving Offline/Fallback Data]:', error);
+
+    let filtered = [...FALLBACK_PRODUCTS];
+
+    if (params.category && params.category !== 'ALL GEAR' && params.category !== 'ALL PRODUCTS') {
+      const catLower = params.category.toLowerCase().replace(/s$/, '');
+      filtered = filtered.filter((p) => {
+        const catObj = typeof p.category === 'object' ? p.category : null;
+        const catName = catObj?.name?.toLowerCase() || '';
+        const catSlug = catObj?.slug?.toLowerCase() || '';
+        return (
+          catName.includes(catLower) ||
+          catSlug.includes(catLower) ||
+          p.title.toLowerCase().includes(catLower)
+        );
+      });
     }
+
+    if (params.search && params.search.trim()) {
+      const s = params.search.trim().toLowerCase();
+      filtered = filtered.filter((p) => {
+        const catObj = typeof p.category === 'object' ? p.category : null;
+        const catName = catObj?.name?.toLowerCase() || '';
+        const isTrackMatch = (s.includes('trac') || s.includes('pant')) && (catName.includes('track') || p.title.toLowerCase().includes('track') || p.title.toLowerCase().includes('pant') || p.title.toLowerCase().includes('jogger'));
+        const isCapMatch = s.includes('cap') && (catName.includes('cap') || p.title.toLowerCase().includes('cap'));
+        const isTeeMatch = (s.includes('tshirt') || s.includes('t-shirt') || s.includes('shirt') || s.includes('tee')) && (catName.includes('shirt') || p.title.toLowerCase().includes('tee') || p.title.toLowerCase().includes('shirt'));
+
+        return (
+          p.title.toLowerCase().includes(s) ||
+          p.description.toLowerCase().includes(s) ||
+          catName.includes(s) ||
+          isTrackMatch ||
+          isCapMatch ||
+          isTeeMatch
+        );
+      });
+    }
+
+    if (params.size && params.size !== 'ALL') {
+      filtered = filtered.filter((p) => p.sizes.includes(params.size as any));
+    }
+
     return {
       success: true,
-      count: FALLBACK_PRODUCTS.length,
-      total: FALLBACK_PRODUCTS.length,
+      count: filtered.length,
+      total: filtered.length,
       page: 1,
       totalPages: 1,
-      data: FALLBACK_PRODUCTS,
+      data: filtered,
     };
   }
 }

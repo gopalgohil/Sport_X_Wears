@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
+import { useSocket } from '../../../context/SocketContext';
 import { getMyOrders } from '../../../lib/api';
 import { Order, AthleticSize } from '../../../types';
 import { formatPrice } from '../../../lib/utils';
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, token, isAuthenticated, isLoading, requestLogout, updateProfile } = useAuth();
   const { addToCart } = useCart();
+  const { socket } = useSocket();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'security'>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -100,6 +102,69 @@ export default function ProfilePage() {
       fetchOrders();
     }
   }, [isAuthenticated, token]);
+
+  // Real-time live order status sync: updates order tracker immediately when admin changes status
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleOrderUpdate = (data: any) => {
+      const updatedOrderId = (
+        data?.orderId ||
+        data?.order?._id ||
+        data?.order ||
+        data?.meta?.orderId
+      )?.toString();
+
+      const newStatus =
+        data?.orderStatus ||
+        data?.meta?.orderStatus ||
+        data?.order?.orderStatus;
+
+      if (!updatedOrderId || !newStatus) {
+        if (token) {
+          getMyOrders(token).then((res) => {
+            if (res?.success && Array.isArray(res.data)) {
+              setOrders(res.data);
+            }
+          });
+        }
+        return;
+      }
+
+      console.log(`[Realtime Order Tracker] Order ${updatedOrderId} status changed to "${newStatus}"`);
+
+      // 1. Immediately reflect new status in the UI without waiting for reload
+      setOrders((prevOrders) =>
+        prevOrders.map((ord) => {
+          if (ord._id.toString() === updatedOrderId) {
+            return {
+              ...ord,
+              orderStatus: newStatus as any,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return ord;
+        })
+      );
+
+      // 2. Also fetch updated orders in background to ensure all nested items & timestamps are completely fresh
+      if (token) {
+        getMyOrders(token).then((res) => {
+          if (res?.success && Array.isArray(res.data)) {
+            setOrders(res.data);
+          }
+        });
+      }
+    };
+
+    socket.on('order_status_updated', handleOrderUpdate);
+    socket.on('order_status_notification', handleOrderUpdate);
+
+    return () => {
+      socket.off('order_status_updated', handleOrderUpdate);
+      socket.off('order_status_notification', handleOrderUpdate);
+    };
+  }, [socket, token]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -4,18 +4,20 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Zap, ShieldCheck, Award, Flame, Loader2, X, Search, RotateCcw } from 'lucide-react';
-import { Product } from '../types';
+import { Product, Category } from '../types';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilter from '../components/product/ProductFilter';
 import { getProducts, getCategories } from '../lib/api';
+import { filterProducts } from '../lib/utils';
 import {
   getCachedProducts,
   getCachedCategories,
   saveCachedProducts,
   saveCachedCategories,
   FALLBACK_PRODUCTS,
+  FALLBACK_CATEGORIES,
 } from '../lib/initialData';
 
 export default function HomePage() {
@@ -30,47 +32,64 @@ export default function HomePage() {
     'Track Pants',
     'Sports Caps',
   ]);
-  // Instant render on frame 0 (no 15-20s waiting)
+  const [categoriesData, setCategoriesData] = useState<Category[]>(FALLBACK_CATEGORIES);
+
+  // Master catalog holding full inventory
+  const [allProducts, setAllProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
+  // Displayed filtered products (updates in 0ms on click)
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync cached data on client mount immediately
+  // 1. Initial cached data load & URL query sync
   useEffect(() => {
-    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const hasSearch = params?.get('search');
-    if (!hasSearch) {
-      const cached = getCachedProducts();
-      if (cached && cached.length > 0) {
-        setProducts(cached);
-      }
-    }
-    const cachedCats = getCachedCategories();
-    if (cachedCats && cachedCats.length > 0) {
-      setCategoriesList(['ALL GEAR', ...cachedCats.map((c) => c.name)]);
-    }
-  }, []);
+    let initialCat = 'ALL GEAR';
+    let initialSearch = '';
 
-  // Sync search query from URL params if present on client
-  useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlQuery = params.get('search') || '';
+      const urlCat = params.get('category') || '';
       if (urlQuery) {
+        initialSearch = urlQuery;
         setSearchQuery(urlQuery);
       }
-      const urlCat = params.get('category') || '';
       if (urlCat) {
+        initialCat = urlCat;
         setSelectedCategory(urlCat);
       }
     }
+
+    const cachedCats = getCachedCategories();
+    if (cachedCats && cachedCats.length > 0) {
+      setCategoriesData(cachedCats);
+      setCategoriesList(['ALL GEAR', ...cachedCats.map((c) => c.name)]);
+    }
+
+    const cached = getCachedProducts();
+    if (cached && cached.length > 0) {
+      setAllProducts(cached);
+      setProducts(
+        filterProducts(
+          cached,
+          {
+            category: initialCat,
+            size: 'ALL',
+            sort: 'featured',
+            search: initialSearch,
+          },
+          cachedCats || FALLBACK_CATEGORIES
+        )
+      );
+    }
   }, []);
 
-  // Fetch dynamic categories in background
+  // 2. Load dynamic categories in background
   useEffect(() => {
     async function loadCategories() {
       try {
         const res = await getCategories();
         if (res.success && res.data && res.data.length > 0) {
+          setCategoriesData(res.data);
           setCategoriesList(['ALL GEAR', ...res.data.map((c) => c.name)]);
           saveCachedCategories(res.data);
         }
@@ -81,9 +100,40 @@ export default function HomePage() {
     loadCategories();
   }, []);
 
-  // Fetch dynamic products in background without blocking initial view
+  // 3. Fetch full master catalog from server on initial load
   useEffect(() => {
-    async function loadProducts() {
+    async function loadFullCatalog() {
+      try {
+        const res = await getProducts({ limit: 100 });
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setAllProducts(res.data);
+          saveCachedProducts(res.data);
+        }
+      } catch (err) {
+        console.warn('Initial full catalog load notice:', err);
+      }
+    }
+    loadFullCatalog();
+  }, []);
+
+  // 4. Instant 0ms client-side filter whenever category, size, sort, or search changes
+  useEffect(() => {
+    // Immediate instant UI update on frame 0
+    const filtered = filterProducts(
+      allProducts,
+      {
+        category: selectedCategory,
+        size: selectedSize,
+        sort: sortBy,
+        search: searchQuery,
+      },
+      categoriesData
+    );
+    setProducts(filtered);
+
+    // Background server query
+    let isCancelled = false;
+    async function syncWithServer() {
       try {
         const res = await getProducts({
           category: selectedCategory !== 'ALL GEAR' ? selectedCategory : undefined,
@@ -92,19 +142,25 @@ export default function HomePage() {
           search: searchQuery.trim() || undefined,
         });
 
-        if (res.success && Array.isArray(res.data)) {
-          setProducts(res.data);
+        if (!isCancelled && res.success && Array.isArray(res.data)) {
+          if (res.data.length > 0) {
+            setProducts(res.data);
+          }
           if (!searchQuery.trim() && selectedCategory === 'ALL GEAR' && selectedSize === 'ALL') {
+            setAllProducts(res.data);
             saveCachedProducts(res.data);
           }
         }
       } catch (err) {
-        console.error('Failed to load dynamic products:', err);
+        console.warn('Server sync error (kept instant client filtered results):', err);
       }
     }
 
-    loadProducts();
-  }, [selectedCategory, selectedSize, sortBy, searchQuery]);
+    syncWithServer();
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedCategory, selectedSize, sortBy, searchQuery, allProducts, categoriesData]);
 
   const handleSearch = (newQuery: string) => {
     setSearchQuery(newQuery);
@@ -250,7 +306,12 @@ export default function HomePage() {
             <ProductFilter
               categories={categoriesList}
               selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={(cat) => {
+                setSelectedCategory(cat);
+                if (cat !== 'ALL GEAR') {
+                  setSearchQuery('');
+                }
+              }}
               selectedSize={selectedSize}
               onSelectSize={setSelectedSize}
               sortBy={sortBy}

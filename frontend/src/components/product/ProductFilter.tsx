@@ -123,14 +123,14 @@ export const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
 
         {/* Active Filter Chips (if any filter is selected) */}
-        {(selectedSize !== 'ALL' || selectedCategory !== 'ALL GEAR') && (
+        {(selectedSize !== 'ALL' || (selectedCategory !== 'ALL GEAR' && selectedCategory !== 'ALL PRODUCTS')) && (
           <div className="flex items-center gap-2 flex-wrap px-3 py-2 bg-neutral-50 border-t border-neutral-100">
             <span className="text-[11px] font-semibold text-neutral-500 uppercase">
               Applied:
             </span>
-            {selectedCategory !== 'ALL GEAR' && (
+            {selectedCategory !== 'ALL GEAR' && selectedCategory !== 'ALL PRODUCTS' && (
               <span
-                onClick={() => onSelectCategory('ALL GEAR')}
+                onClick={() => onSelectCategory(categories.includes('ALL PRODUCTS') ? 'ALL PRODUCTS' : 'ALL GEAR')}
                 className="inline-flex items-center gap-1 bg-white border border-neutral-300 text-neutral-800 text-[11px] font-bold px-2 py-0.5 cursor-pointer hover:border-red-600"
               >
                 {selectedCategory}

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../../../components/common/Navbar';
 import Footer from '../../../components/common/Footer';
+import { useSocket } from '../../../context/SocketContext';
 import { getOrderById } from '../../../lib/api';
 import { formatPrice } from '../../../lib/utils';
 
@@ -82,6 +83,7 @@ function ConfettiEffect() {
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
+  const { socket } = useSocket();
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -116,6 +118,28 @@ function OrderSuccessContent() {
 
     loadOrder();
   }, [orderId]);
+
+  // Real-time live status sync for order success view
+  useEffect(() => {
+    if (!socket || !orderId) return;
+
+    const handleOrderUpdate = (data: any) => {
+      const updatedOrderId = (data?.orderId || data?.order?._id || data?.order)?.toString();
+      const newStatus = data?.orderStatus || data?.meta?.orderStatus || data?.order?.orderStatus;
+
+      if (updatedOrderId === orderId && newStatus) {
+        setOrder((prev: any) => (prev ? { ...prev, orderStatus: newStatus } : prev));
+      }
+    };
+
+    socket.on('order_status_updated', handleOrderUpdate);
+    socket.on('order_status_notification', handleOrderUpdate);
+
+    return () => {
+      socket.off('order_status_updated', handleOrderUpdate);
+      socket.off('order_status_notification', handleOrderUpdate);
+    };
+  }, [socket, orderId]);
 
   if (loading) {
     return (

@@ -20,11 +20,13 @@ import {
 import { Order } from '@/types';
 import { getAllOrdersAdmin, updateOrderStatusAdmin } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useSocket } from '@/context/SocketContext';
 
 const STATUS_OPTIONS = ['all', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
 
 export default function AdminOrdersPage() {
   const { token } = useAuth();
+  const { socket } = useSocket();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,23 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     fetchOrders();
   }, [statusFilter, token]);
+
+  // Live real-time sync for admin order pipeline
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleLiveOrderEvent = () => {
+      fetchOrders();
+    };
+
+    socket.on('new_order_notification', handleLiveOrderEvent);
+    socket.on('order_status_updated', handleLiveOrderEvent);
+
+    return () => {
+      socket.off('new_order_notification', handleLiveOrderEvent);
+      socket.off('order_status_updated', handleLiveOrderEvent);
+    };
+  }, [socket]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

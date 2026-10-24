@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Product, CartItem, AthleticSize } from '../types';
+import { useAuth } from './AuthContext';
 
 interface CartContextType {
   items: CartItem[];
@@ -22,34 +23,66 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading: authLoading } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem('sportxwear_cart');
-      if (savedCart) {
-        setItems(JSON.parse(savedCart));
-      }
-    } catch (e) {
-      console.error('Failed to load cart from localStorage', e);
-    } finally {
-      setIsHydrated(true);
-    }
-  }, []);
+  // Track the user ID associated with currently active cart
+  const activeUserRef = useRef<string | null>(null);
 
-  // Save cart to localStorage when items change (only after initial hydration)
+  // Helper to obtain user-isolated storage key
+  const getStorageKey = (userId?: string | null) => {
+    return userId ? `sportxwear_cart_${userId}` : 'sportxwear_cart_guest';
+  };
+
+  // Sync cart whenever active user changes (login, register, logout, or session load)
   useEffect(() => {
-    if (isHydrated) {
+    if (authLoading) return;
+
+    const currentUserId = user?._id || null;
+
+    if (activeUserRef.current !== currentUserId || !isHydrated) {
+      activeUserRef.current = currentUserId;
+
       try {
-        localStorage.setItem('sportxwear_cart', JSON.stringify(items));
+        if (typeof window !== 'undefined') {
+          // Remove legacy un-scoped cart key so old items never leak into new users
+          localStorage.removeItem('sportxwear_cart');
+
+          const key = getStorageKey(currentUserId);
+          const savedCart = localStorage.getItem(key);
+
+          if (savedCart) {
+            const parsed = JSON.parse(savedCart);
+            setItems(Array.isArray(parsed) ? parsed : []);
+          } else {
+            // New user has 0 items until they explicitly add something
+            setItems([]);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load user-isolated cart from localStorage', e);
+        setItems([]);
+      } finally {
+        setIsHydrated(true);
+      }
+    }
+  }, [user?._id, authLoading, isHydrated]);
+
+  // Save cart to user-isolated storage key when items change
+  useEffect(() => {
+    if (isHydrated && !authLoading) {
+      try {
+        if (typeof window !== 'undefined') {
+          const key = getStorageKey(activeUserRef.current);
+          localStorage.setItem(key, JSON.stringify(items));
+        }
       } catch (e) {
         console.error('Failed to save cart to localStorage', e);
       }
     }
-  }, [items, isHydrated]);
+  }, [items, isHydrated, authLoading]);
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
@@ -99,7 +132,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = () => {
     setItems([]);
     try {
-      localStorage.removeItem('sportxwear_cart');
+      if (typeof window !== 'undefined') {
+        const key = getStorageKey(activeUserRef.current);
+        localStorage.removeItem(key);
+      }
     } catch (e) {
       console.error('Failed to clear cart in localStorage', e);
     }
